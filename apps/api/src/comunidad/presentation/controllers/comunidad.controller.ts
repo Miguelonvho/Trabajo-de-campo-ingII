@@ -35,7 +35,7 @@ import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 @ApiTags('Comunidades')
 @Controller('comunidades')
 export class ComunidadController {
-  public constructor(private readonly comunidadService: IComunidadService) {}
+  public constructor(private readonly comunidadService: IComunidadService) { }
 
   /**
    * Crea una nueva comunidad.

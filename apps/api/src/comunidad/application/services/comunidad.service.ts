@@ -22,6 +22,9 @@ import { ICategoriaComunidadService } from '../../../categoria-comunidad/service
  * Servicio encargado de la lógica de negocio de Comunidades.
  * Utiliza interfaces de comando (CrearComunidadCommand) para desacoplarse de la capa HTTP.
  */
+// @Injectable() registra esta clase en el contenedor de dependencias de NestJS.
+// Gracias a eso, Nest puede crear una instancia de ComunidadService e inyectarla
+// donde se la necesite, por ejemplo en controllers u otros servicios.
 @Injectable()
 export class ComunidadService implements IComunidadService {
   private readonly logger = new Logger(ComunidadService.name);
@@ -42,6 +45,9 @@ export class ComunidadService implements IComunidadService {
    * @throws {NotFoundException} Si la categoría de comunidad especificada no existe.
    * @throws {InternalServerErrorException} Si ocurre un error inesperado durante la creación o asignación de permisos.
    */
+  // @Transactional() hace que todo este metodo se ejecute dentro de una
+  // transaccion de base de datos. Si algo falla al crear la comunidad o al
+  // agregar el miembro creador, se revierte todo para no dejar datos a medias.
   @Transactional()
   public async crearComunidad(
     command: CrearComunidadCommand,
@@ -140,6 +146,9 @@ export class ComunidadService implements IComunidadService {
    * @returns Una promesa que resuelve con los datos de la comunidad actualizada.
    * @throws {NotFoundException} Si la comunidad o la nueva categoría especificada no existen.
    */
+  // @Transactional() agrupa la lectura, validaciones y guardado final en una
+  // misma transaccion. Si el update falla, los cambios no quedan aplicados
+  // parcialmente.
   @Transactional()
   public async actualizarComunidad(
     id: string,
@@ -177,6 +186,8 @@ export class ComunidadService implements IComunidadService {
    * @returns Una promesa que resuelve cuando la comunidad ha sido desactivada.
    * @throws {NotFoundException} Si la comunidad no existe.
    */
+  // @Transactional() protege la baja logica: se busca la comunidad, se cambia
+  // su estado en la entidad y se guarda como una sola operacion consistente.
   @Transactional()
   public async desactivarComunidad(id: string): Promise<void> {
     const comunidad = await this.getComunidad(id);
@@ -191,6 +202,8 @@ export class ComunidadService implements IComunidadService {
    * @returns Una promesa que resuelve cuando la comunidad ha sido reactivada.
    * @throws {NotFoundException} Si la comunidad no existe.
    */
+  // @Transactional() protege la reactivacion: si ocurre un error al guardar,
+  // la base de datos conserva el estado anterior de la comunidad.
   @Transactional()
   public async reactivarComunidad(id: string): Promise<void> {
     const comunidad = await this.getComunidad(id);
