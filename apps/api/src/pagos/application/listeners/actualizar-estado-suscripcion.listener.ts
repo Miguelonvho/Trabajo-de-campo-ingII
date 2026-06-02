@@ -1,6 +1,6 @@
 import { PagoListener } from '../../domain/pago-listener.interface';
-import { Pago } from '../../models/pago.entity';
-import { ISuscripcionesRepository } from '../../../suscripciones/infrastructure/suscripciones.repository.interface';
+import { Pago } from '../../domain/entities/pago.entity';
+import { ISuscripcionesRepository } from '../../../suscripciones/domain/ports/suscripciones.repository.interface';
 
 /**
  * Observador encargado de actualizar el estado de la suscripción local a ACTIVA.

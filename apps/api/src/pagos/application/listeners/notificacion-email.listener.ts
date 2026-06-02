@@ -1,7 +1,7 @@
 import { Logger } from '@nestjs/common';
 import { PagoListener } from '../../domain/pago-listener.interface';
-import { Pago } from '../../models/pago.entity';
-import { ISuscripcionesRepository } from '../../../suscripciones/infrastructure/suscripciones.repository.interface';
+import { Pago } from '../../domain/entities/pago.entity';
+import { ISuscripcionesRepository } from '../../../suscripciones/domain/ports/suscripciones.repository.interface';
 import { IPlanesService } from '../../../planes/application/services/planes.service.interface';
 import { IUsuariosService } from '../../../usuarios/services/usuarios.service.interface';
 import { IComunidadService } from '../../../comunidad/application/services/comunidad.service.interface';

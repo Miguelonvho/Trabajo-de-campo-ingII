@@ -1,4 +1,4 @@
-import { Pago } from '../models/pago.entity';
+import { Pago } from './entities/pago.entity';
 
 /**
  * Interfaz que deben implementar todos los observadores de eventos de pagos.

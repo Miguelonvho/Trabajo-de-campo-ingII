@@ -1,5 +1,5 @@
 import { PagoListener } from './pago-listener.interface';
-import type { Pago } from '../models/pago.entity';
+import type { Pago } from './entities/pago.entity';
 
 /**
  * Gestor de Eventos clásico en memoria.
@@ -16,7 +16,7 @@ export class PagoEventManager {
       this.listeners.set(eventType, []);
     }
     const currentListeners = this.listeners.get(eventType);
-    
+
     // Evitamos duplicidad de suscripción
     if (currentListeners && !currentListeners.includes(listener)) {
       currentListeners.push(listener);

@@ -1,17 +1,23 @@
 import { Module } from '@nestjs/common';
+import { APP_FILTER } from '@nestjs/core';
 import { PrismaModule } from '../prisma/prisma.module';
 import { PlanesModule } from '../planes/planes.module';
 import { MercadoPagoModule } from '../mercadopago/mercadopago.module';
-import { SuscripcionesController } from './controllers/suscripciones.controller';
-import { ISuscripcionesService } from './services/suscripciones.service.interface';
-import { SuscripcionesService } from './services/suscripciones.service';
-import { ISuscripcionesRepository } from './infrastructure/suscripciones.repository.interface';
-import { PrismaSuscripcionesRepository } from './repositories/suscripciones.prisma.repository';
+import { DomainExceptionFilter } from '../common/filters/domain-exception.filter';
+import { SuscripcionesController } from './presentation/controllers/suscripciones.controller';
+import { ISuscripcionesService } from './application/services/suscripciones.service.interface';
+import { SuscripcionesService } from './application/services/suscripciones.service';
+import { ISuscripcionesRepository } from './domain/ports/suscripciones.repository.interface';
+import { PrismaSuscripcionesRepository } from './infrastructure/persistence/repositories/suscripciones.prisma.repository';
 
 @Module({
   imports: [PrismaModule, PlanesModule, MercadoPagoModule],
   controllers: [SuscripcionesController],
   providers: [
+    {
+      provide: APP_FILTER,
+      useClass: DomainExceptionFilter,
+    },
     {
       provide: ISuscripcionesService,
       useClass: SuscripcionesService,

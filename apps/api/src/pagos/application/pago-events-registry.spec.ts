@@ -1,6 +1,6 @@
 import { PagoEventsRegistry } from './pago-events-registry';
 import { PagoEventManager } from '../domain/pago-event-manager';
-import { Pago } from '../models/pago.entity';
+import { Pago } from '../domain/entities/pago.entity';
 import { ActualizarEstadoSuscripcionListener } from './listeners/actualizar-estado-suscripcion.listener';
 import { AccesoComunidadListener } from './listeners/acceso-comunidad.listener';
 import { NotificacionEmailListener } from './listeners/notificacion-email.listener';
