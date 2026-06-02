@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alexandria - Banco de Pruebas de Mercado Pago</title>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Mercado Pago SDK -->
+  <script src="https://sdk.mercadopago.com/js/v2"></script>
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+      --card-bg: rgba(30, 41, 59, 0.7);
+      --border-color: rgba(255, 255, 255, 0.1);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --success: #10b981;
+      --error: #ef4444;
+      --warning: #f59e0b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem;
+      overflow-x: hidden;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    header h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      background: linear-gradient(to right, #818cf8, #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+    }
+
+    header p {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 900px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .panel h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .input-group label {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .input-group input, .input-group textarea {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      color: var(--text-main);
+      font-family: inherit;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .input-group input:focus, .input-group textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+    }
+
+    .btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 0.8rem 1.5rem;
+      font-family: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      text-align: center;
+      text-decoration: none;
+      font-size: 0.95rem;
+    }
+
+    .btn:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-success {
+      background: var(--success);
+    }
+    .btn-success:hover {
+      background: #059669;
+    }
+
+    /* Consola de logs */
+    .console {
+      background: rgba(15, 23, 42, 0.8);
+      font-family: monospace;
+      font-size: 0.85rem;
+      padding: 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      height: 250px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .log-line {
+      display: flex;
+      gap: 0.5rem;
+      line-height: 1.4;
+    }
+
+    .log-time {
+      color: var(--text-muted);
+    }
+
+    .log-info { color: #38bdf8; }
+    .log-success { color: var(--success); }
+    .log-error { color: var(--error); }
+    .log-warning { color: var(--warning); }
+
+    /* Contenedor de Bricks de Mercado Pago */
+    #cardPaymentBrick_container {
+      width: 100%;
+      min-height: 350px;
+      background: rgba(15, 23, 42, 0.4);
+      border-radius: 12px;
+      padding: 1rem;
+      border: 1px dashed var(--border-color);
+    }
+
+    .status-badge {
+      font-size: 0.75rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+    .badge-pending { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+    .badge-success { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Banco de Pruebas: Pagos y Suscripciones</h1>
+    <p>Prueba el flujo completo con Mercado Pago Sandbox de forma visual</p>
+  </header>
+
+  <div class="container">
+    <!-- Panel Izquierdo: Configuración del Entorno -->
+    <div class="panel">
+      <h2>
+        1. Configuración de API
+        <span id="connection-status" class="status-badge badge-pending">Desconectado</span>
+      </h2>
+
+      <div class="input-group">
+        <label for="jwt-token">1. Token JWT (Bearer Token de Login)</label>
+        <textarea id="jwt-token" rows="2" placeholder="Pega el access_token obtenido del endpoint de iniciar-sesión"></textarea>
+      </div>
+
+      <div class="input-group">
+        <label for="public-key">2. Mercado Pago Public Key (Credencial Sandbox Comprador)</label>
+        <input type="text" id="public-key" placeholder="TEST-xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+      </div>
+
+      <div class="input-group">
+        <label for="plan-id">3. UUID del Plan de Comunidad (Local)</label>
+        <input type="text" id="plan-id" placeholder="id_plan_comunidad en tu DB">
+      </div>
+
+      <div class="input-group">
+        <label for="user-email">4. Email del Pagador</label>
+        <input type="email" id="user-email" value="juan.test@ejemplo.com" placeholder="juan.test@ejemplo.com">
+      </div>
+
+      <div class="input-group">
+        <label for="backend-url">NestJS Backend URL</label>
+        <input type="text" id="backend-url" value="http://localhost:3001">
+      </div>
+
+      <button class="btn" onclick="initializeMPCheckout()">Inicializar Formulario de Pago</button>
+    </div>
+
+    <!-- Panel Derecho: Formulario y Consola -->
+    <div class="panel">
+      <h2>2. Checkout y Resultados</h2>
+      
+      <!-- Contenedor del Brick de Tarjetas de Mercado Pago -->
+      <div id="cardPaymentBrick_container">
+        <p style="text-align: center; color: var(--text-muted); padding-top: 100px;">
+          Configura los datos del panel izquierdo e inicializa el formulario para cargar los campos seguros de la tarjeta.
+        </p>
+      </div>
+
+      <h2>3. Registro de Operaciones (Consola)</h2>
+      <div class="console" id="console-logs">
+        <div class="log-line"><span class="log-time">[13:00:00]</span> <span class="log-info">Consola lista. Esperando inicialización...</span></div>
+      </div>
+
+      <!-- Simulador de Webhooks -->
+      <div id="webhook-simulator" style="display: none; border-top: 1px solid var(--border-color); padding-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
+        <h3 style="font-size: 1rem; color: var(--warning);">Simulador de Webhook de Pago</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted);">
+          La suscripción fue creada pero está <strong>PENDIENTE</strong>. Envía el ID del cobro a tu webhook para que el backend la active y otorgue acceso.
+        </p>
+        <div style="display: flex; gap: 0.5rem;">
+          <input type="text" id="webhook-payment-id" placeholder="ID de cobro de MP (ej. 1234567)" style="flex: 1; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); border-radius: 8px; padding: 0.5rem; color: white;">
+          <button class="btn btn-success" onclick="simulateWebhook()">Simular Webhook</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Cargar credenciales guardadas en localStorage
+    document.addEventListener('DOMContentLoaded', () => {
+      if (localStorage.getItem('mp_jwt')) document.getElementById('jwt-token').value = localStorage.getItem('mp_jwt');
+      if (localStorage.getItem('mp_public_key')) document.getElementById('public-key').value = localStorage.getItem('mp_public_key');
+      if (localStorage.getItem('mp_plan_id')) document.getElementById('plan-id').value = localStorage.getItem('mp_plan_id');
+      if (localStorage.getItem('mp_email')) document.getElementById('user-email').value = localStorage.getItem('mp_email');
+      if (localStorage.getItem('mp_backend_url')) document.getElementById('backend-url').value = localStorage.getItem('mp_backend_url');
+    });
+
+    function log(message, type = 'info') {
+      const consoleBox = document.getElementById('console-logs');
+      const time = new Date().toTimeString().split(' ')[0];
+      const logLine = document.createElement('div');
+      logLine.className = 'log-line';
+      logLine.innerHTML = `<span class="log-time">[${time}]</span> <span class="log-${type}">${message}</span>`;
+      consoleBox.appendChild(logLine);
+      consoleBox.scrollTop = consoleBox.scrollHeight;
+    }
+
+    let mpInstance = null;
+    let cardBrickController = null;
+    let createdSubscriptionId = null;
+
+    async function initializeMPCheckout() {
+      const jwtToken = document.getElementById('jwt-token').value.trim();
+      const publicKey = document.getElementById('public-key').value.trim();
+      const planId = document.getElementById('plan-id').value.trim();
+      const email = document.getElementById('user-email').value.trim();
+      const backendUrl = document.getElementById('backend-url').value.trim();
+
+      if (!jwtToken || !publicKey || !planId || !email) {
+        log('Error: Completa todos los campos antes de inicializar.', 'error');
+        alert('Por favor completa: Token JWT, Public Key, Plan ID y Email.');
+        return;
+      }
+
+      // Guardar en localStorage para comodidad del desarrollador
+      localStorage.setItem('mp_jwt', jwtToken);
+      localStorage.setItem('mp_public_key', publicKey);
+      localStorage.setItem('mp_plan_id', planId);
+      localStorage.setItem('mp_email', email);
+      localStorage.setItem('mp_backend_url', backendUrl);
+
+      log('Inicializando SDK de Mercado Pago...', 'info');
+      document.getElementById('cardPaymentBrick_container').innerHTML = '';
+
+      try {
+        mpInstance = new window.MercadoPago(publicKey);
+        const bricksBuilder = mpInstance.bricks();
+
+        const settings = {
+          initialization: {
+            amount: 100, // Monto ficticio requerido por el validador del Brick
+          },
+          customization: {
+            visual: {
+              style: {
+                theme: 'dark', // Estilo dark para integrarse con la UI
+              }
+            }
+          },
+          callbacks: {
+            onReady: () => {
+              log('¡Formulario de Mercado Pago cargado exitosamente!', 'success');
+              document.getElementById('connection-status').className = 'status-badge badge-success';
+              document.getElementById('connection-status').innerText = 'Conectado';
+            },
+            onSubmit: async (formData) => {
+              log('Tokenizando tarjeta de crédito de forma segura en Mercado Pago...', 'info');
+              const cardToken = formData.token;
+              
+              if (!cardToken) {
+                log('Error: No se pudo obtener el token de la tarjeta.', 'error');
+                return;
+              }
+              
+              log(`Token obtenido: ${cardToken.substring(0, 15)}...`, 'success');
+              await sendSubscriptionRequest(cardToken, planId, email, jwtToken, backendUrl);
+            },
+            onError: (error) => {
+              log(`Error en el Brick de Mercado Pago: ${JSON.stringify(error)}`, 'error');
+            },
+          },
+        };
+
+        cardBrickController = await bricksBuilder.create(
+          'cardPayment',
+          'cardPaymentBrick_container',
+          settings
+        );
+
+      } catch (err) {
+        log(`Fallo al instanciar Mercado Pago: ${err.message}`, 'error');
+      }
+    }
+
+    async function sendSubscriptionRequest(cardToken, planId, email, jwtToken, backendUrl) {
+      log('Enviando solicitud de suscripción a tu API NestJS...', 'info');
+      
+      try {
+        const response = await fetch(`${backendUrl}/suscripciones/comunidad`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${jwtToken}`
+          },
+          body: JSON.stringify({
+            id_plan_comunidad: planId,
+            token_tarjeta: cardToken,
+            email: email,
+            back_url: `${window.location.origin}/suscripcion-completada`
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          log(`Error de la API (${response.status}): ${data.message || JSON.stringify(data)}`, 'error');
+          return;
+        }
+
+        log('¡Suscripción creada en estado PENDIENTE de forma exitosa!', 'success');
+        log(`ID de Suscripción de MP: ${data.mp_subscription_id}`, 'success');
+        
+        createdSubscriptionId = data.mp_subscription_id;
+
+        // Mostrar el simulador de webhooks para facilitar las pruebas
+        const webhookDiv = document.getElementById('webhook-simulator');
+        webhookDiv.style.display = 'flex';
+        log('Puedes simular la notificación del cobro de Mercado Pago en la sección de abajo.', 'warning');
+
+      } catch (err) {
+        log(`Fallo de conexión con el backend: ${err.message}`, 'error');
+      }
+    }
+
+    async function simulateWebhook() {
+      const backendUrl = document.getElementById('backend-url').value.trim();
+      const paymentId = document.getElementById('webhook-payment-id').value.trim();
+
+      if (!paymentId) {
+        alert('Ingresa un ID de cobro (ej. un número aleatorio de 10 dígitos o uno real de MP).');
+        return;
+      }
+
+      log(`Enviando notificación Webhook simulada para pago ID: ${paymentId}...`, 'info');
+
+      try {
+        const response = await fetch(`${backendUrl}/webhooks/mercadopago`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            action: 'payment.created',
+            api_version: 'v1',
+            data: {
+              id: paymentId
+            },
+            type: 'payment'
+          })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          log('Webhook enviado. Servidor retornó 200 OK.', 'success');
+          log('Revisa los logs de tu consola NestJS para verificar la aprobación de la suscripción y la activación del miembro.', 'warning');
+        } else {
+          log(`Error en Webhook (${response.status}): ${JSON.stringify(data)}`, 'error');
+        }
+      } catch (err) {
+        log(`Error al enviar webhook: ${err.message}`, 'error');
+      }
+    }
+  </script>
+</body>
+</html>
