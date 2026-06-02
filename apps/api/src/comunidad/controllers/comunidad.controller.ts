@@ -35,7 +35,7 @@ import { ComunidadOwnerGuard } from '../../common/guards/comunidad-owner.guard';
 @ApiTags('Comunidades')
 @Controller('comunidades')
 export class ComunidadController {
-  public constructor(private readonly comunidadService: IComunidadService) {}
+  public constructor(private readonly comunidadService: IComunidadService) { }
 
   /**
    * Crea una nueva comunidad.

@@ -12,6 +12,8 @@ import { UsuariosModule } from './usuarios/usuarios.module';
 import { ComunidadModule } from './comunidad/comunidad.module';
 import { PlanesModule } from './planes/planes.module';
 import { CategoriaComunidadModule } from './categoria-comunidad/categoria-comunidad.module';
+import { SuscripcionesModule } from './suscripciones/suscripciones.module';
+import { PagosModule } from './pagos/pagos.module';
 
 @Module({
   imports: [
@@ -37,6 +39,8 @@ import { CategoriaComunidadModule } from './categoria-comunidad/categoria-comuni
     ComunidadModule,
     PlanesModule,
     CategoriaComunidadModule,
+    SuscripcionesModule,
+    PagosModule,
   ],
 
   controllers: [AppController],

@@ -34,5 +34,27 @@ export abstract class IMercadoPagoService {
   public abstract cancelPreapprovalPlan(
     mp_preapproval_plan_id: string,
   ): Promise<void>;
+
+  /**
+   * Registra una suscripción (PreApproval) vinculada a un plan existente y un token de tarjeta.
+   *
+   * @param planId - ID del plan en Mercado Pago (preapproval_plan_id).
+   * @param email - Email del pagador.
+   * @param cardTokenId - Token de la tarjeta obtenido en el frontend.
+   * @returns El ID de la suscripción y el punto de inicio.
+   */
+  public abstract createSubscription(
+    planId: string,
+    email: string,
+    cardTokenId: string,
+  ): Promise<{ mp_subscription_id: string; init_point?: string }>;
+
+  /**
+   * Obtiene la información detallada de un pago a partir de su identificador.
+   *
+   * @param paymentId - ID del pago de Mercado Pago.
+   * @returns La información cruda del pago.
+   */
+  public abstract getPayment(paymentId: string): Promise<any>;
 }
 
