@@ -2,9 +2,9 @@ import { Logger } from '@nestjs/common';
 import { PagoListener } from '../../domain/pago-listener.interface';
 import { Pago } from '../../models/pago.entity';
 import { ISuscripcionesRepository } from '../../../suscripciones/infrastructure/suscripciones.repository.interface';
-import { IPlanesService } from '../../../planes/services/planes.service.interface';
+import { IPlanesService } from '../../../planes/application/services/planes.service.interface';
 import { IUsuariosService } from '../../../usuarios/services/usuarios.service.interface';
-import { IComunidadService } from '../../../comunidad/services/comunidad.service.interface';
+import { IComunidadService } from '../../../comunidad/application/services/comunidad.service.interface';
 
 /**
  * Observador encargado de enviar notificaciones de correo tras el procesamiento exitoso de un pago.
@@ -23,7 +23,10 @@ export class NotificacionEmailListener implements PagoListener {
    * Al recibir la notificación, obtiene la información del usuario y comunidad para simular el correo.
    */
   public async update(pago: Pago): Promise<void> {
-    const suscripcion = await this.suscripcionesRepository.buscarSuscripcionPorId(pago.id_suscripcion);
+    const suscripcion =
+      await this.suscripcionesRepository.buscarSuscripcionPorId(
+        pago.id_suscripcion,
+      );
     if (!suscripcion) return;
 
     const [usuario, plan] = await Promise.all([
@@ -33,7 +36,9 @@ export class NotificacionEmailListener implements PagoListener {
 
     if (!usuario || !plan) return;
 
-    const comunidad = await this.comunidadService.getComunidad(plan.id_comunidad);
+    const comunidad = await this.comunidadService.getComunidad(
+      plan.id_comunidad,
+    );
     if (!comunidad) return;
 
     // Simulación del envío de correo (Mock de proveedor de emails)

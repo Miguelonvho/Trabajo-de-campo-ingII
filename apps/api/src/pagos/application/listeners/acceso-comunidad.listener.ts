@@ -1,8 +1,8 @@
 import { PagoListener } from '../../domain/pago-listener.interface';
 import { Pago } from '../../models/pago.entity';
 import { ISuscripcionesRepository } from '../../../suscripciones/infrastructure/suscripciones.repository.interface';
-import { IPlanesService } from '../../../planes/services/planes.service.interface';
-import { IMiembroService } from '../../../miembro/services/miembro.service.interface';
+import { IPlanesService } from '../../../planes/application/services/planes.service.interface';
+import { IMiembroService } from '../../../miembro/application/services/miembro.service.interface';
 import { ROLES } from '../../../common/constants/roles';
 
 /**
@@ -20,12 +20,17 @@ export class AccesoComunidadListener implements PagoListener {
    * Al recibir la notificación de pago, asocia al usuario a la comunidad.
    */
   public async update(pago: Pago): Promise<void> {
-    const suscripcion = await this.suscripcionesRepository.buscarSuscripcionPorId(pago.id_suscripcion);
+    const suscripcion =
+      await this.suscripcionesRepository.buscarSuscripcionPorId(
+        pago.id_suscripcion,
+      );
     if (!suscripcion) {
       return;
     }
 
-    const plan = await this.planesService.getPlan(suscripcion.id_plan_comunidad);
+    const plan = await this.planesService.getPlan(
+      suscripcion.id_plan_comunidad,
+    );
 
     try {
       await this.miembroService.agregarMiembro({

@@ -20,10 +20,10 @@ import { PagoEventsRegistry } from './application/pago-events-registry';
 import { Pago } from './models/pago.entity';
 
 import { ISuscripcionesRepository } from '../suscripciones/infrastructure/suscripciones.repository.interface';
-import { IPlanesService } from '../planes/services/planes.service.interface';
-import { IMiembroService } from '../miembro/services/miembro.service.interface';
+import { IPlanesService } from '../planes/application/services/planes.service.interface';
+import { IMiembroService } from '../miembro/application/services/miembro.service.interface';
 import { IUsuariosService } from '../usuarios/services/usuarios.service.interface';
-import { IComunidadService } from '../comunidad/services/comunidad.service.interface';
+import { IComunidadService } from '../comunidad/application/services/comunidad.service.interface';
 
 @Module({
   imports: [

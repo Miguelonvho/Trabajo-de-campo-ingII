@@ -1,13 +1,14 @@
 jest.mock('@nestjs-cls/transactional', () => ({
-  Transactional: () => (target: any, key: string, descriptor: PropertyDescriptor) => {
-    return descriptor;
-  },
+  Transactional:
+    () => (target: any, key: string, descriptor: PropertyDescriptor) => {
+      return descriptor;
+    },
 }));
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { SuscripcionesService } from './suscripciones.service';
 import { ISuscripcionesRepository } from '../infrastructure/suscripciones.repository.interface';
-import { IPlanesService } from '../../planes/services/planes.service.interface';
+import { IPlanesService } from '../../planes/application/services/planes.service.interface';
 import { IMercadoPagoService } from '../../mercadopago/services/mercadopago.service.interface';
 import { NotFoundException } from '@nestjs/common';
 import { Suscripcion } from '../models/suscripcion.entity';
@@ -84,7 +85,11 @@ describe('SuscripcionesService', () => {
     expect(resultado.id_usuario).toBe('user-123');
     expect(resultado.id_plan_comunidad).toBe('plan-123');
     expect(planesServiceMock.getPlan).toHaveBeenCalledWith('plan-123');
-    expect(mpServiceMock.createSubscription).toHaveBeenCalledWith('mp-plan-123', 'test@email.com', 'token-123');
+    expect(mpServiceMock.createSubscription).toHaveBeenCalledWith(
+      'mp-plan-123',
+      'test@email.com',
+      'token-123',
+    );
   });
 
   it('debe arrojar NotFoundException si el plan no existe', async () => {

@@ -2,7 +2,7 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { ISuscripcionesService } from './suscripciones.service.interface';
 import { ISuscripcionesRepository } from '../infrastructure/suscripciones.repository.interface';
-import { IPlanesService } from '../../planes/services/planes.service.interface';
+import { IPlanesService } from '../../planes/application/services/planes.service.interface';
 import { IMercadoPagoService } from '../../mercadopago/services/mercadopago.service.interface';
 import type { CrearSuscripcionCommand } from './suscripciones.commands';
 import { Suscripcion } from '../models/suscripcion.entity';
@@ -44,7 +44,8 @@ export class SuscripcionesService implements ISuscripcionesService {
       );
 
     // 3. Resolver el UUID del estado PENDIENTE de forma dinámica
-    const id_estado_pendiente = await this.suscripcionesRepository.buscarEstadoIdPorNombre('PENDIENTE');
+    const id_estado_pendiente =
+      await this.suscripcionesRepository.buscarEstadoIdPorNombre('PENDIENTE');
     if (!id_estado_pendiente) {
       throw new InternalServerErrorException(
         'El estado PENDIENTE no se encuentra configurado en la base de datos',
