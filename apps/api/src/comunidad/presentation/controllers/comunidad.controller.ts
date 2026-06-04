@@ -35,7 +35,9 @@ import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 @ApiTags('Comunidades')
 @Controller('comunidades')
 export class ComunidadController {
-  public constructor(private readonly comunidadService: IComunidadService) { }
+  public constructor(
+    private readonly comunidadService: IComunidadService,
+  ) { }
 
   /**
    * Crea una nueva comunidad.
@@ -119,6 +121,28 @@ export class ComunidadController {
   ): Promise<ComunidadResponseDto> {
     const resultado = await this.comunidadService.getComunidadPorSlug(slug);
     return ComunidadResponseDto.fromEntity(resultado);
+  }
+
+  /**
+   * Obtiene el rol del usuario autenticado en una comunidad específica por su slug.
+   *
+   * @param slug - El identificador amigable de la comunidad.
+   * @param usuario - El usuario autenticado.
+   * @returns El rol en la comunidad o null si no es miembro.
+   */
+  @ApiOperation({ summary: 'Obtiene el rol del usuario autenticado en una comunidad' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Get('s/:slug/rol')
+  public async getRolEnComunidad(
+    @Param('slug') slug: string,
+    @CurrentUser() usuario: IUsuario,
+  ): Promise<{ rol: 'CREADOR' | 'SUSCRIPTOR' | null }> {
+    const rol = await this.comunidadService.obtenerRolUsuarioEnComunidad(
+      usuario.id_usuario.toString(),
+      slug,
+    );
+    return { rol };
   }
 
   /**

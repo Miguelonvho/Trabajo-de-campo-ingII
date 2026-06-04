@@ -80,4 +80,16 @@ export abstract class IComunidadService {
    * @throws {NotFoundException} Si la comunidad no existe.
    */
   abstract reactivarComunidad(id: string): Promise<void>;
+
+  /**
+   * Obtiene el rol de un usuario en una comunidad específica a partir de su slug.
+   *
+   * @param idUsuario - Identificador único del usuario.
+   * @param slug - El identificador amigable de la comunidad.
+   * @returns El rol del usuario o null si no pertenece a la comunidad.
+   */
+  abstract obtenerRolUsuarioEnComunidad(
+    idUsuario: string,
+    slug: string,
+  ): Promise<'CREADOR' | 'SUSCRIPTOR' | null>;
 }

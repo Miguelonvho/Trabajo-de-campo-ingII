@@ -210,4 +210,33 @@ export class ComunidadService implements IComunidadService {
     comunidad.reactivarComunidad();
     await this.comunidadRepository.actualizarComunidad(comunidad);
   }
+
+  /**
+   * Obtiene el rol de un usuario en una comunidad específica a partir de su slug.
+   */
+  public async obtenerRolUsuarioEnComunidad(
+    idUsuario: string,
+    slug: string,
+  ): Promise<'CREADOR' | 'SUSCRIPTOR' | null> {
+    try {
+      const comunidad = await this.getComunidadPorSlug(slug);
+      const miembro = await this.miembroService.buscarMiembro(
+        idUsuario,
+        comunidad.id_comunidad.toString(),
+      );
+      if (!miembro) {
+        return null;
+      }
+
+      if (miembro.id_rol_comunidad === ROLES.CREADOR) {
+        return 'CREADOR';
+      }
+      if (miembro.id_rol_comunidad === ROLES.SUSCRIPTOR) {
+        return 'SUSCRIPTOR';
+      }
+      return null;
+    } catch (error) {
+      return null;
+    }
+  }
 }

@@ -1,3 +1,4 @@
+import { Miembro } from '../../domain/entities/miembro.entity';
 import {
   AgregarMiembroCommand,
   CambiarRolMiembroCommand,
@@ -40,4 +41,16 @@ export abstract class IMiembroService {
     id_usuario: string,
     id_comunidad: string,
   ): Promise<boolean>;
+
+  /**
+   * Obtiene la membresía de un usuario en una comunidad si existe.
+   *
+   * @param id_usuario - Identificador del usuario.
+   * @param id_comunidad - Identificador de la comunidad.
+   * @returns El registro del miembro o null si no pertenece.
+   */
+  public abstract buscarMiembro(
+    id_usuario: string,
+    id_comunidad: string,
+  ): Promise<Miembro | null>;
 }

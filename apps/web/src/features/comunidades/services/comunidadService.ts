@@ -45,6 +45,18 @@ export const comunidadService = {
   },
 
   /**
+   * Obtiene el rol del usuario autenticado en la comunidad por su slug.
+   * Si no está autenticado o no es miembro, retorna { rol: null }
+   */
+  async getRolEnComunidad(slug: string): Promise<{ rol: 'CREADOR' | 'SUSCRIPTOR' | null }> {
+    try {
+      return await api.get<{ rol: 'CREADOR' | 'SUSCRIPTOR' | null }>(`/comunidades/s/${slug}/rol`);
+    } catch {
+      return { rol: null };
+    }
+  },
+
+  /**
    * Obtiene la lista de categorías disponibles
    */
   async getCategorias(): Promise<ICategoriaComunidad[]> {
