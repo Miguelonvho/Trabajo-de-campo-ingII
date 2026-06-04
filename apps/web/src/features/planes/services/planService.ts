@@ -22,5 +22,12 @@ export const planService = {
    */
   async getCiclosPago(): Promise<ICicloPago[]> {
     return api.get<ICicloPago[]>('/planes/config/ciclos-pago');
+  },
+
+  /**
+   * Obtiene la información detallada de un plan de suscripción por su ID
+   */
+  async getPlan(id: string): Promise<IPlanComunidad> {
+    return api.get<IPlanComunidad>(`/planes/${id}`);
   }
 };

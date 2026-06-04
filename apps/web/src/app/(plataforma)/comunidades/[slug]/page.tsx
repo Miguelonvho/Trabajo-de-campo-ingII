@@ -175,17 +175,38 @@ export default async function ComunidadDetallePage({ params }: Props) {
                     </span>
                   </div>
                 </div>
-                <div className="mt-8 pt-6 border-t border-slate-50 flex justify-between items-center">
-                   <div className="flex flex-col">
-                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">ID Mercado Pago</span>
-                     <span className="text-[10px] font-bold text-slate-600 truncate max-w-[120px]">
-                       {plan.mp_preapproval_plan_id || 'No vinculado'}
-                     </span>
-                   </div>
-                   <Link href="#" className="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 hover:text-sky-600 hover:bg-sky-50 transition-all flex items-center justify-center">
-                     <Settings size={18} />
-                   </Link>
-                </div>
+                {isCreator ? (
+                  <div className="mt-8 pt-6 border-t border-slate-50 flex justify-between items-center w-full">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">ID Mercado Pago</span>
+                      <span className="text-[10px] font-bold text-slate-600 truncate max-w-[120px]">
+                        {plan.mp_preapproval_plan_id || 'No vinculado'}
+                      </span>
+                    </div>
+                    <Link href="#" className="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 hover:text-sky-600 hover:bg-sky-50 transition-all flex items-center justify-center">
+                      <Settings size={18} />
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="mt-8 pt-6 border-t border-slate-50 w-full">
+                    {plan.activa ? (
+                      <Link 
+                        href={`/comunidades/${slug}/checkout/${plan.id_plan_comunidad}`}
+                        className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-sky-600 text-white font-black rounded-2xl hover:bg-sky-500 hover:-translate-y-0.5 transition-all text-sm shadow-md shadow-sky-500/10 hover:shadow-sky-500/20 active:scale-95 duration-200"
+                      >
+                        <CreditCard size={18} />
+                        Suscribirse al Plan
+                      </Link>
+                    ) : (
+                      <button 
+                        disabled
+                        className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-slate-100 text-slate-400 font-bold rounded-2xl text-sm cursor-not-allowed"
+                      >
+                        No disponible
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
           </div>

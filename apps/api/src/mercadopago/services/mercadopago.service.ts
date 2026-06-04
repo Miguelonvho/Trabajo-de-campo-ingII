@@ -1,6 +1,7 @@
 import { Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { MercadoPagoConfig, PreApprovalPlan, PreApproval, Payment } from 'mercadopago';
+import { randomUUID } from 'crypto';
+import { MercadoPagoConfig, PreApprovalPlan } from 'mercadopago'; // SDK real para planes
 import {
   IMercadoPagoService,
   CrearPreapprovalPlanData,
@@ -10,18 +11,18 @@ import {
 export class MercadoPagoService implements IMercadoPagoService {
   private readonly logger = new Logger(MercadoPagoService.name);
   private readonly preApprovalPlan: PreApprovalPlan;
-  private readonly preApproval: PreApproval;
-  private readonly payment: Payment;
 
   public constructor(private readonly configService: ConfigService) {
+    // Inicialización del cliente real de Mercado Pago para los planes
     const client = new MercadoPagoConfig({
       accessToken: this.configService.getOrThrow<string>('MP_ACCESS_TOKEN'),
     });
     this.preApprovalPlan = new PreApprovalPlan(client);
-    this.preApproval = new PreApproval(client);
-    this.payment = new Payment(client);
   }
 
+  /**
+   * [REAL] Registra un plan de suscripción recurrente en Mercado Pago de forma real.
+   */
   public async createPreapprovalPlan(
     data: CrearPreapprovalPlanData,
   ): Promise<{ mp_preapproval_plan_id: string }> {
@@ -46,6 +47,7 @@ export class MercadoPagoService implements IMercadoPagoService {
         );
       }
 
+      this.logger.log(`[REAL MP] Plan creado con ID: ${response.id}`);
       return { mp_preapproval_plan_id: response.id };
     } catch (error) {
       this.logger.error('Error al registrar plan en Mercado Pago', error);
@@ -56,6 +58,9 @@ export class MercadoPagoService implements IMercadoPagoService {
     }
   }
 
+  /**
+   * [REAL] Cancela un plan existente en Mercado Pago.
+   */
   public async cancelPreapprovalPlan(
     mp_preapproval_plan_id: string,
   ): Promise<void> {
@@ -77,51 +82,45 @@ export class MercadoPagoService implements IMercadoPagoService {
     }
   }
 
+  /**
+   * [SIMULADO] Crea una suscripción simulada local generando un UUID único.
+   */
   public async createSubscription(
     planId: string,
     email: string,
     cardTokenId: string,
   ): Promise<{ mp_subscription_id: string; init_point?: string }> {
-    try {
-      const response = await this.preApproval.create({
-        body: {
-          preapproval_plan_id: planId,
-          payer_email: email,
-          card_token_id: cardTokenId,
-          status: 'authorized',
-        },
-      });
+    // Generación de UUID único para evitar colisiones
+    const mockSubId = randomUUID();
+    const mockInitPoint = `http://localhost:3000/simulador-pago?subscription_id=${mockSubId}`;
 
-      if (!response.id) {
-        throw new HttpException(
-          'No se pudo registrar la suscripción en Mercado Pago',
-          HttpStatus.BAD_GATEWAY,
-        );
-      }
+    this.logger.log(
+      `[SIMULACIÓN MP] Suscribiendo a ${email} al Plan ${planId} (Token Tarjeta: ${cardTokenId}). UUID generado: ${mockSubId}`,
+    );
 
-      return {
-        mp_subscription_id: response.id,
-        init_point: response.init_point,
-      };
-    } catch (error) {
-      this.logger.error('Error al registrar suscripción en Mercado Pago', error);
-      throw new HttpException(
-        'Error en pasarela de pagos al registrar la suscripción',
-        HttpStatus.BAD_GATEWAY,
-      );
-    }
+    return {
+      mp_subscription_id: mockSubId,
+      init_point: mockInitPoint,
+    };
   }
 
+  /**
+   * [SIMULADO] Simula la recuperación de los datos del pago para el webhook.
+   */
   public async getPayment(paymentId: string): Promise<any> {
-    try {
-      const response = await this.payment.get({ id: paymentId });
-      return response;
-    } catch (error) {
-      this.logger.error(`Error al obtener pago ${paymentId} de Mercado Pago`, error);
-      throw new HttpException(
-        'No se pudo recuperar la información del pago de Mercado Pago',
-        HttpStatus.BAD_GATEWAY,
-      );
-    }
+    this.logger.log(`[SIMULACIÓN MP] Consultando detalles para el pago: ${paymentId}`);
+
+    return {
+      id: paymentId,
+      status: 'approved',
+      transaction_amount: 1500,
+      currency_id: 'ARS',
+      preapproval_id: paymentId,
+      payment_method_id: 'visa',
+      description: 'Cobro de suscripción simulado local',
+      transaction_details: {
+        net_received_amount: 1420,
+      },
+    };
   }
 }

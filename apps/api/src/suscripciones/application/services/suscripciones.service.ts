@@ -45,10 +45,10 @@ export class SuscripcionesService implements ISuscripcionesService {
 
     // 3. Resolver el UUID del estado PENDIENTE de forma dinámica
     const id_estado_pendiente =
-      await this.suscripcionesRepository.buscarEstadoIdPorNombre('PENDIENTE');
+      await this.suscripcionesRepository.buscarEstadoIdPorNombre('pending');
     if (!id_estado_pendiente) {
       throw new InternalServerErrorException(
-        'El estado PENDIENTE no se encuentra configurado en la base de datos',
+        'El estado pending no se encuentra configurado en la base de datos',
       );
     }
 

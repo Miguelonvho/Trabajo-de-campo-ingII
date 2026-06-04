@@ -56,7 +56,7 @@ export class PagosService implements IPagosService {
     }
 
     // 4. Resolver dinámicamente los IDs necesarios en la BD
-    const idEstadoPendiente = await this.pagosRepository.buscarEstadoIdPorNombre('PENDIENTE');
+    const idEstadoPendiente = await this.pagosRepository.buscarEstadoIdPorNombre('pending');
     const idMoneda = await this.pagosRepository.buscarMonedaIdPorNombre(paymentData.currency_id || 'ARS');
 
     if (!idEstadoPendiente || !idMoneda) {
@@ -85,9 +85,9 @@ export class PagosService implements IPagosService {
 
     // 6. Si el pago fue aprobado, ejecutar el cambio de estado e iniciar el patrón Observer
     if (paymentData.status === 'approved') {
-      const idEstadoAprobado = await this.pagosRepository.buscarEstadoIdPorNombre('APROBADO');
+      const idEstadoAprobado = await this.pagosRepository.buscarEstadoIdPorNombre('approved');
       if (!idEstadoAprobado) {
-        throw new InternalServerErrorException('El estado APROBADO no está configurado en BD');
+        throw new InternalServerErrorException('El estado approved no está configurado en BD');
       }
 
       // El método aprobarPago cambia el estado de la entidad y lanza la notificación al manager
@@ -97,12 +97,12 @@ export class PagosService implements IPagosService {
       await this.pagosRepository.actualizarPago(pago);
       this.logger.log(`Pago ${paymentId} procesado y aprobado exitosamente.`);
     } else if (paymentData.status === 'rejected') {
-      const idEstadoRechazado = await this.pagosRepository.buscarEstadoIdPorNombre('RECHAZADO');
+      const idEstadoRechazado = await this.pagosRepository.buscarEstadoIdPorNombre('rejected');
       if (idEstadoRechazado) {
         pago.rechazarPago(idEstadoRechazado);
         await this.pagosRepository.actualizarPago(pago);
       }
-      this.logger.log(`Pago ${paymentId} procesado con estado RECHAZADO.`);
+      this.logger.log(`Pago ${paymentId} procesado con estado rejected.`);
     }
   }
 }

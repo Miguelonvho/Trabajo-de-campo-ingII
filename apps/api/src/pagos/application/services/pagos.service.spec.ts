@@ -84,8 +84,8 @@ describe('PagosService', () => {
     } as any);
 
     pagosRepoMock.buscarEstadoIdPorNombre.mockImplementation(async (nombre) => {
-      if (nombre === 'PENDIENTE') return 'uuid-pago-pendiente';
-      if (nombre === 'APROBADO') return 'uuid-pago-aprobado';
+      if (nombre === 'pending') return 'uuid-pago-pendiente';
+      if (nombre === 'approved') return 'uuid-pago-aprobado';
       return null;
     });
 

@@ -20,8 +20,8 @@ export class ActualizarEstadoSuscripcionListener implements PagoListener {
       return;
     }
 
-    // Resolver dinámicamente el ID del estado 'ACTIVA'
-    const idEstadoActiva = await this.suscripcionesRepository.buscarEstadoIdPorNombre('ACTIVA');
+    // Resolver dinámicamente el ID del estado 'active'
+    const idEstadoActiva = await this.suscripcionesRepository.buscarEstadoIdPorNombre('active');
     if (!idEstadoActiva) {
       return;
     }
