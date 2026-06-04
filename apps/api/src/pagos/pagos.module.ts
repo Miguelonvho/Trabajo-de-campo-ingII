@@ -1,4 +1,4 @@
-import { Module, OnModuleInit } from '@nestjs/common';
+import { Module, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { APP_FILTER } from '@nestjs/core';
 import { PrismaModule } from '../prisma/prisma.module';
 import { MercadoPagoModule } from '../mercadopago/mercadopago.module';
@@ -18,7 +18,6 @@ import { PrismaPagosRepository } from './infrastructure/persistence/repositories
 import { ActualizarEstadoSuscripcionListener } from './application/listeners/actualizar-estado-suscripcion.listener';
 import { AccesoComunidadListener } from './application/listeners/acceso-comunidad.listener';
 import { NotificacionEmailListener } from './application/listeners/notificacion-email.listener';
-import { PagoEventsRegistry } from './application/pago-events-registry';
 import { Pago } from './domain/entities/pago.entity';
 
 import { ISuscripcionesRepository } from '../suscripciones/domain/ports/suscripciones.repository.interface';
@@ -96,7 +95,7 @@ import { IComunidadService } from '../comunidad/application/services/comunidad.s
   ],
   exports: [IPagosService, IPagosRepository],
 })
-export class PagosModule implements OnModuleInit {
+export class PagosModule implements OnModuleInit, OnModuleDestroy {
   public constructor(
     private readonly activarSuscripcion: ActualizarEstadoSuscripcionListener,
     private readonly accesoComunidad: AccesoComunidadListener,
@@ -104,12 +103,14 @@ export class PagosModule implements OnModuleInit {
   ) {}
 
   public onModuleInit(): void {
-    // Al arrancar el servidor web, configuramos el registro de los observadores en el gestor estático (Pago.events)
-    PagoEventsRegistry.registrar(
-      Pago.events,
-      this.activarSuscripcion,
-      this.accesoComunidad,
-      this.notificacionEmail,
-    );
+    Pago.events.subscribe('pagoAprobado', this.activarSuscripcion);
+    Pago.events.subscribe('pagoAprobado', this.accesoComunidad);
+    Pago.events.subscribe('pagoAprobado', this.notificacionEmail);
+  }
+
+  public onModuleDestroy(): void {
+    Pago.events.unsubscribe('pagoAprobado', this.activarSuscripcion);
+    Pago.events.unsubscribe('pagoAprobado', this.accesoComunidad);
+    Pago.events.unsubscribe('pagoAprobado', this.notificacionEmail);
   }
 }
