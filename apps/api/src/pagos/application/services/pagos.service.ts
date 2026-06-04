@@ -91,7 +91,7 @@ export class PagosService implements IPagosService {
       }
 
       // El método aprobarPago cambia el estado de la entidad y lanza la notificación al manager
-      pago.aprobarPago(idEstadoAprobado);
+      await pago.aprobarPago(idEstadoAprobado);
 
       // Guardar la actualización de estado del pago
       await this.pagosRepository.actualizarPago(pago);

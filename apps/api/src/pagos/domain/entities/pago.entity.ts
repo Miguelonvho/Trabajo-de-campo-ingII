@@ -147,7 +147,7 @@ export class Pago {
    *
    * @param idEstadoAprobado - ID UUID correspondiente al estado 'APROBADO'.
    */
-  public aprobarPago(idEstadoAprobado: string): void {
+  public async aprobarPago(idEstadoAprobado: string): Promise<void> {
     if (this._id_estado === idEstadoAprobado) {
       throw new PagoYaAprobadoException(this._id_pago);
     }
@@ -157,7 +157,7 @@ export class Pago {
     this._fecha_actualizacion = ahora;
 
     // Disparar evento a observadores pasando la instancia actual
-    Pago.events.notify('pagoAprobado', this);
+    await Pago.events.notify('pagoAprobado', this);
   }
 
   /**

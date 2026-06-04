@@ -39,12 +39,12 @@ export class PagoEventManager {
   /**
    * Notifica a todos los observadores registrados para el tipo de evento especificado.
    */
-  public notify(eventType: string, pago: Pago): void {
+  public async notify(eventType: string, pago: Pago): Promise<void> {
     const currentListeners = this.listeners.get(eventType);
     if (currentListeners) {
-      currentListeners.forEach((listener) => {
-        listener.update(pago);
-      });
+      for (const listener of currentListeners) {
+        await listener.update(pago);
+      }
     }
   }
 

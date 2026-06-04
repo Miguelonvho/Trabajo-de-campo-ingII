@@ -9,5 +9,5 @@ export interface PagoListener {
    *
    * @param pago - Instancia del pago modificado.
    */
-  update(pago: Pago): void;
+  update(pago: Pago): Promise<void> | void;
 }
