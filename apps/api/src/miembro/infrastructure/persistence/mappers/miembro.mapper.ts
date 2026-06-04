@@ -18,6 +18,7 @@ export class MiembroMapper {
       id_rol_comunidad: miembro.id_rol_comunidad,
       fecha_ingreso: miembro.fecha_ingreso,
       fecha_actualizacion: miembro.fecha_actualizacion,
+      activo: miembro.activo,
     });
   }
 }

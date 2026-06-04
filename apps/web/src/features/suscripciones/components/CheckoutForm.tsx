@@ -19,7 +19,7 @@ export function CheckoutForm({ planId, email, slug, planName, planPrice }: Check
   const [expiry, setExpiry] = useState('');
   const [cvv, setCvv] = useState('');
   const [isFlipped, setIsFlipped] = useState(false);
-  
+
   // Status states
   const [loading, setLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState('');
@@ -30,7 +30,7 @@ export function CheckoutForm({ planId, email, slug, planName, planPrice }: Check
   const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.replace(/\D/g, '');
     if (value.length > 16) value = value.slice(0, 16);
-    
+
     // Group by 4 digits
     const matches = value.match(/.{1,4}/g);
     const formatted = matches ? matches.join(' ') : '';
@@ -41,7 +41,7 @@ export function CheckoutForm({ planId, email, slug, planName, planPrice }: Check
   const handleExpiryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.replace(/\D/g, '');
     if (value.length > 4) value = value.slice(0, 4);
-    
+
     if (value.length > 2) {
       value = `${value.slice(0, 2)}/${value.slice(2)}`;
     }
@@ -84,7 +84,7 @@ export function CheckoutForm({ planId, email, slug, planName, planPrice }: Check
       // 1. Crear la suscripción (Fase 1: Intención en estado PENDIENTE)
       // Generamos un token dummy que comienza con mock_token_
       const mockToken = `mock_token_${Math.random().toString(36).substring(2, 10)}${Math.random().toString(36).substring(2, 10)}`;
-      
+
       const res = await crearSuscripcionAction({
         id_plan_comunidad: planId,
         token_tarjeta: mockToken,
@@ -137,7 +137,7 @@ export function CheckoutForm({ planId, email, slug, planName, planPrice }: Check
         <div className="w-20 h-20 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center shadow-inner ring-8 ring-emerald-50/50 animate-bounce">
           <CheckCircle2 size={44} className="stroke-[2.5]" />
         </div>
-        
+
         <div className="space-y-2">
           <h2 className="text-3xl font-black text-slate-950 tracking-tight">¡Suscripción Activada!</h2>
           <p className="text-slate-500 font-medium max-w-md">
@@ -176,16 +176,15 @@ export function CheckoutForm({ planId, email, slug, planName, planPrice }: Check
 
   return (
     <div className="space-y-10">
-      
+
       {/* MOCKUP INTERACTIVO DE TARJETA 3D */}
       <div className="perspective-1000 w-full max-w-[400px] mx-auto h-56 relative group">
-        <div 
-          className={`w-full h-full rounded-[24px] duration-700 preserve-3d relative shadow-2xl ${
-            isFlipped ? 'rotate-y-180' : ''
-          }`}
+        <div
+          className={`w-full h-full rounded-[24px] duration-700 preserve-3d relative shadow-2xl ${isFlipped ? 'rotate-y-180' : ''
+            }`}
         >
           {/* FRENTE DE LA TARJETA */}
-          <div 
+          <div
             className="absolute inset-0 backface-hidden rounded-[24px] p-6 text-white flex flex-col justify-between overflow-hidden shadow-inner"
             style={{
               background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #3b82f6 100%)',
@@ -193,7 +192,7 @@ export function CheckoutForm({ planId, email, slug, planName, planPrice }: Check
           >
             {/* Shimmer Effect */}
             <div className="absolute inset-0 bg-linear-to-tr from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full duration-1500 transition-transform"></div>
-            
+
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-[9px] uppercase tracking-widest text-slate-400 font-bold">Tarjeta de Simulación</p>
@@ -213,7 +212,7 @@ export function CheckoutForm({ planId, email, slug, planName, planPrice }: Check
               <p className="text-xl md:text-2xl font-mono tracking-widest font-medium">
                 {cardNumber || '•••• •••• •••• ••••'}
               </p>
-              
+
               <div className="flex justify-between items-end">
                 {/* Titular */}
                 <div className="flex-1 mr-4">
@@ -222,7 +221,7 @@ export function CheckoutForm({ planId, email, slug, planName, planPrice }: Check
                     {cardName || 'Nombre del Titular'}
                   </p>
                 </div>
-                
+
                 {/* Vencimiento */}
                 <div className="shrink-0 text-right">
                   <p className="text-[7px] uppercase tracking-widest text-slate-400 font-bold">Vence</p>
@@ -240,14 +239,14 @@ export function CheckoutForm({ planId, email, slug, planName, planPrice }: Check
           </div>
 
           {/* DORSO DE LA TARJETA (CVV) */}
-          <div 
+          <div
             className="absolute inset-0 backface-hidden rotate-y-180 rounded-[24px] py-6 text-white flex flex-col justify-between overflow-hidden shadow-inner"
             style={{
               background: 'linear-gradient(135deg, #020617 0%, #0f172a 100%)',
             }}
           >
             <div className="w-full h-11 bg-slate-950 mt-2"></div>
-            
+
             <div className="px-6 space-y-4">
               <div className="flex items-center gap-4">
                 {/* CVV Box */}
@@ -258,7 +257,7 @@ export function CheckoutForm({ planId, email, slug, planName, planPrice }: Check
                   Código de Seguridad
                 </div>
               </div>
-              
+
               <p className="text-[8px] text-slate-500 font-medium leading-normal">
                 Esta tarjeta se utiliza exclusivamente para la simulación del flujo de Mercado Pago en Komu. No posee valor comercial real ni está vinculada a cuentas bancarias reales.
               </p>
@@ -274,7 +273,7 @@ export function CheckoutForm({ planId, email, slug, planName, planPrice }: Check
 
       {/* FORMULARIO DE PAGO */}
       <form onSubmit={handleSubmit} className="space-y-6">
-        
+
         {error && (
           <div className="p-4 bg-red-50 border border-red-100 text-red-700 rounded-2xl flex items-start gap-3 text-sm font-medium animate-shake">
             <AlertCircle size={20} className="shrink-0 text-red-500" />
@@ -385,7 +384,7 @@ export function CheckoutForm({ planId, email, slug, planName, planPrice }: Check
             <div className="w-16 h-16 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center shadow-inner relative">
               <Loader2 size={32} className="animate-spin" />
             </div>
-            
+
             <div className="space-y-2">
               <h3 className="text-2xl font-black text-slate-950">Procesando Cobro</h3>
               <p className="text-slate-500 font-medium text-sm">

@@ -48,6 +48,7 @@ export class PrismaMiembroRepository implements IMiembroRepository {
         id_comunidad: miembro.id_comunidad,
         id_rol_comunidad: miembro.id_rol_comunidad,
         fecha_ingreso: miembro.fecha_ingreso,
+        activo: miembro.activo,
       },
     });
   }
@@ -67,6 +68,7 @@ export class PrismaMiembroRepository implements IMiembroRepository {
       data: {
         id_rol_comunidad: miembro.id_rol_comunidad,
         fecha_actualizacion: miembro.fecha_actualizacion,
+        activo: miembro.activo,
       },
     });
   }

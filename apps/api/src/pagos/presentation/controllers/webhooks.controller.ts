@@ -6,7 +6,7 @@ import {
   HttpStatus,
   Logger,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { IPagosService } from '../../application/services/pagos.service.interface';
 
 /**
@@ -25,6 +25,20 @@ export class WebhooksController {
    */
   @ApiOperation({ summary: 'Recibe notificaciones webhook de Mercado Pago' })
   @ApiResponse({ status: 200, description: 'Notificación recibida.' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        type: { type: 'string', example: 'payment' },
+        data: {
+          type: 'object',
+          properties: {
+            id: { type: 'string', example: 'ID_DE_LA_SUSCRIPCION_reject' }
+          }
+        }
+      }
+    }
+  })
   @Post('mercadopago')
   @HttpCode(HttpStatus.OK)
   public async recibirNotificacion(

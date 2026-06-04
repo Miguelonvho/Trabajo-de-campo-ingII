@@ -11,6 +11,7 @@ export class Miembro {
   private _id_comunidad: string;
   private _id_rol_comunidad: string;
   private _fecha_ingreso: Date;
+  private _activo: boolean;
   private _fecha_actualizacion?: Date | null;
   private _comunidad?: IComunidad;
   private _rol?: IRol;
@@ -21,12 +22,14 @@ export class Miembro {
     id_comunidad: string,
     id_rol_comunidad: string,
     fecha_ingreso: Date,
+    activo = true,
     fecha_actualizacion?: Date | null,
   ) {
     this._id_usuario = id_usuario;
     this._id_comunidad = id_comunidad;
     this.id_rol_comunidad = id_rol_comunidad;
     this._fecha_ingreso = fecha_ingreso;
+    this._activo = activo;
     this._fecha_actualizacion = fecha_actualizacion;
   }
 
@@ -46,6 +49,10 @@ export class Miembro {
   /** Fecha exacta en la que se unió a la comunidad. */
   public get fecha_ingreso(): Date {
     return this._fecha_ingreso;
+  }
+  /** Indica si la membresía está activa (Soft Delete). */
+  public get activo(): boolean {
+    return this._activo;
   }
   /** Fecha de la última actualización de sus datos o rol. */
   public get fecha_actualizacion(): Date | null | undefined {
@@ -87,6 +94,7 @@ export class Miembro {
       props.id_comunidad,
       props.id_rol_comunidad,
       new Date(),
+      true,
     );
   }
 
@@ -101,6 +109,7 @@ export class Miembro {
     id_comunidad: string;
     id_rol_comunidad: string;
     fecha_ingreso: Date;
+    activo: boolean;
     fecha_actualizacion?: Date | null;
     comunidad?: IComunidad;
     rol?: IRol;
@@ -111,6 +120,7 @@ export class Miembro {
     miembro._id_comunidad = props.id_comunidad;
     miembro._id_rol_comunidad = props.id_rol_comunidad;
     miembro._fecha_ingreso = props.fecha_ingreso;
+    miembro._activo = props.activo;
     miembro._fecha_actualizacion = props.fecha_actualizacion;
     miembro._comunidad = props.comunidad;
     miembro._rol = props.rol;
@@ -129,6 +139,22 @@ export class Miembro {
       throw new RolYaAsignadoException(nuevoRolId);
     }
     this._id_rol_comunidad = nuevoRolId;
+    this._fecha_actualizacion = new Date();
+  }
+
+  /**
+   * Reactiva la membresía (Soft Delete revertido).
+   */
+  public activar(): void {
+    this._activo = true;
+    this._fecha_actualizacion = new Date();
+  }
+
+  /**
+   * Desactiva la membresía (Soft Delete).
+   */
+  public desactivar(): void {
+    this._activo = false;
     this._fecha_actualizacion = new Date();
   }
 }

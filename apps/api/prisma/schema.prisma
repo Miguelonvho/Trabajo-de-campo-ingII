@@ -115,6 +115,7 @@ model miembro_comunidad {
   id_rol_comunidad    String    @db.Uuid
   fecha_ingreso       DateTime  @default(now()) @db.Timestamptz(6)
   fecha_actualizacion DateTime? @db.Timestamptz(6)
+  activo              Boolean   @default(true)
   comunidad           comunidad @relation(fields: [id_comunidad], references: [id_comunidad], onDelete: NoAction, onUpdate: NoAction, map: "fk_miembro_comunidad")
   rol                 rol       @relation(fields: [id_rol_comunidad], references: [id_rol], onDelete: NoAction, onUpdate: NoAction, map: "fk_miembro_rol")
   usuario             usuario   @relation(fields: [id_usuario], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction, map: "fk_miembro_usuario")

@@ -2,6 +2,7 @@ import { Miembro } from '../../domain/entities/miembro.entity';
 import {
   AgregarMiembroCommand,
   CambiarRolMiembroCommand,
+  RemoverMiembroCommand,
 } from '../commands/miembro.commands';
 
 /**
@@ -53,4 +54,12 @@ export abstract class IMiembroService {
     id_usuario: string,
     id_comunidad: string,
   ): Promise<Miembro | null>;
+
+  /**
+   * Elimina un usuario como miembro de una comunidad.
+   *
+   * @param command - Datos que contienen id_usuario e id_comunidad.
+   * @returns Una promesa que se resuelve cuando la operación se completa.
+   */
+  public abstract removerMiembro(command: RemoverMiembroCommand): Promise<void>;
 }

@@ -18,6 +18,9 @@ import { PrismaPagosRepository } from './infrastructure/persistence/repositories
 import { ActualizarEstadoSuscripcionListener } from './application/listeners/actualizar-estado-suscripcion.listener';
 import { AccesoComunidadListener } from './application/listeners/acceso-comunidad.listener';
 import { NotificacionEmailListener } from './application/listeners/notificacion-email.listener';
+import { DesactivarSuscripcionListener } from './application/listeners/desactivar-suscripcion.listener';
+import { RemoverMiembroComunidadListener } from './application/listeners/remover-miembro-comunidad.listener';
+import { NotificacionEmailCancelacionListener } from './application/listeners/notificacion-email-cancelacion.listener';
 import { Pago } from './domain/entities/pago.entity';
 
 import { ISuscripcionesRepository } from '../suscripciones/domain/ports/suscripciones.repository.interface';
@@ -92,6 +95,47 @@ import { IComunidadService } from '../comunidad/application/services/comunidad.s
         IComunidadService,
       ],
     },
+    {
+      provide: DesactivarSuscripcionListener,
+      useFactory: (suscripcionesRepository: ISuscripcionesRepository) =>
+        new DesactivarSuscripcionListener(suscripcionesRepository),
+      inject: [ISuscripcionesRepository],
+    },
+    {
+      provide: RemoverMiembroComunidadListener,
+      useFactory: (
+        suscripcionesRepository: ISuscripcionesRepository,
+        planesService: IPlanesService,
+        miembroService: IMiembroService,
+      ) =>
+        new RemoverMiembroComunidadListener(
+          suscripcionesRepository,
+          planesService,
+          miembroService,
+        ),
+      inject: [ISuscripcionesRepository, IPlanesService, IMiembroService],
+    },
+    {
+      provide: NotificacionEmailCancelacionListener,
+      useFactory: (
+        suscripcionesRepository: ISuscripcionesRepository,
+        planesService: IPlanesService,
+        usuariosService: IUsuariosService,
+        comunidadService: IComunidadService,
+      ) =>
+        new NotificacionEmailCancelacionListener(
+          suscripcionesRepository,
+          planesService,
+          usuariosService,
+          comunidadService,
+        ),
+      inject: [
+        ISuscripcionesRepository,
+        IPlanesService,
+        IUsuariosService,
+        IComunidadService,
+      ],
+    },
   ],
   exports: [IPagosService, IPagosRepository],
 })
@@ -100,17 +144,28 @@ export class PagosModule implements OnModuleInit, OnModuleDestroy {
     private readonly activarSuscripcion: ActualizarEstadoSuscripcionListener,
     private readonly accesoComunidad: AccesoComunidadListener,
     private readonly notificacionEmail: NotificacionEmailListener,
+    private readonly desactivarSuscripcion: DesactivarSuscripcionListener,
+    private readonly removerMiembro: RemoverMiembroComunidadListener,
+    private readonly notificacionEmailCancelacion: NotificacionEmailCancelacionListener,
   ) {}
 
   public onModuleInit(): void {
     Pago.events.subscribe('pagoAprobado', this.activarSuscripcion);
     Pago.events.subscribe('pagoAprobado', this.accesoComunidad);
     Pago.events.subscribe('pagoAprobado', this.notificacionEmail);
+
+    Pago.events.subscribe('pagoRechazado', this.desactivarSuscripcion);
+    Pago.events.subscribe('pagoRechazado', this.removerMiembro);
+    Pago.events.subscribe('pagoRechazado', this.notificacionEmailCancelacion);
   }
 
   public onModuleDestroy(): void {
     Pago.events.unsubscribe('pagoAprobado', this.activarSuscripcion);
     Pago.events.unsubscribe('pagoAprobado', this.accesoComunidad);
     Pago.events.unsubscribe('pagoAprobado', this.notificacionEmail);
+
+    Pago.events.unsubscribe('pagoRechazado', this.desactivarSuscripcion);
+    Pago.events.unsubscribe('pagoRechazado', this.removerMiembro);
+    Pago.events.unsubscribe('pagoRechazado', this.notificacionEmailCancelacion);
   }
 }

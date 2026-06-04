@@ -150,7 +150,7 @@ export class PagosService implements IPagosService {
     } else if (datos.status === 'rejected') {
       const idEstadoRechazado = await this.pagosRepository.buscarEstadoIdPorNombre('rejected');
       if (idEstadoRechazado) {
-        pago.rechazarPago(idEstadoRechazado);
+        await pago.rechazarPago(idEstadoRechazado);
         await this.pagosRepository.actualizarPago(pago);
       }
       this.logger.log(`Pago ${datos.paymentId} procesado con estado rejected.`);

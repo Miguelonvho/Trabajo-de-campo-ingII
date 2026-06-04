@@ -163,8 +163,10 @@ export class Pago {
   /**
    * Rechaza el pago.
    */
-  public rechazarPago(idEstadoRechazado: string): void {
+  public async rechazarPago(idEstadoRechazado: string): Promise<void> {
     this._id_estado = idEstadoRechazado;
     this._fecha_actualizacion = new Date();
+
+    await Pago.events.notify('pagoRechazado', this);
   }
 }
