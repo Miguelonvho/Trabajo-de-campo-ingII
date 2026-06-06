@@ -13,11 +13,26 @@ export const validateCheckoutForm = (
   cvv: string
 ): string | null => {
   const rawCardNumber = cardNumber.replace(/\s/g, '');
+  
+  if (!rawCardNumber) {
+    return 'El número de tarjeta es obligatorio';
+  }
+  if (!cardName.trim()) {
+    return 'El nombre del titular es obligatorio';
+  }
+  if (!expiry) {
+    return 'La fecha de vencimiento es obligatoria';
+  }
+  if (!cvv) {
+    return 'El código de seguridad (CVV) es obligatorio';
+  }
+
   const cardType = getCardType(rawCardNumber);
   const isAmex = cardType === 'Amex';
 
   // 1. Tarjeta (Longitud y Algoritmo de Luhn)
   if (rawCardNumber.length < 15 || rawCardNumber.length > 16) {
+
     return 'El número de tarjeta debe tener 15 o 16 dígitos';
   }
 

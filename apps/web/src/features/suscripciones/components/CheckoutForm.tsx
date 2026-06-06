@@ -158,7 +158,6 @@ export function CheckoutForm({ planId, email, slug, planName, planPrice }: Check
                 placeholder="4000 1234 5678 9010"
                 value={cardNumber}
                 onChange={handleCardNumberChange}
-                required
                 className="w-full pl-12 pr-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-950 font-medium text-base outline-none transition-all focus:bg-white focus:border-sky-500 focus:ring-4 focus:ring-sky-100 placeholder:text-slate-400"
               />
               <CreditCard size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -173,10 +172,10 @@ export function CheckoutForm({ planId, email, slug, planName, planPrice }: Check
               placeholder="Juan Pérez"
               value={cardName}
               onChange={(e) => setCardName(e.target.value)}
-              required
               className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-950 font-medium text-base outline-none transition-all focus:bg-white focus:border-sky-500 focus:ring-4 focus:ring-sky-100 placeholder:text-slate-400 uppercase"
             />
           </div>
+
 
           {/* Expiry & CVV */}
           <div className="grid grid-cols-2 gap-4">
@@ -187,7 +186,6 @@ export function CheckoutForm({ planId, email, slug, planName, planPrice }: Check
                 placeholder="MM/AA"
                 value={expiry}
                 onChange={handleExpiryChange}
-                required
                 className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-950 font-medium text-base outline-none transition-all focus:bg-white focus:border-sky-500 focus:ring-4 focus:ring-sky-100 placeholder:text-slate-400 text-center"
               />
             </div>
@@ -201,11 +199,11 @@ export function CheckoutForm({ planId, email, slug, planName, planPrice }: Check
                 onChange={handleCvvChange}
                 onFocus={() => setIsFlipped(true)}
                 onBlur={() => setIsFlipped(false)}
-                required
                 className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-950 font-medium text-base outline-none transition-all focus:bg-white focus:border-sky-500 focus:ring-4 focus:ring-sky-100 placeholder:text-slate-400 text-center font-mono"
               />
             </div>
           </div>
+
         </div>
 
         <button
