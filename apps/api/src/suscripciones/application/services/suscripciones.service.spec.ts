@@ -6,7 +6,9 @@ jest.mock('@nestjs-cls/transactional', () => ({
 }));
 
 import { Test, TestingModule } from '@nestjs/testing';
+import { InternalServerErrorException } from '@nestjs/common';
 import { SuscripcionesService } from './suscripciones.service';
+
 import { ISuscripcionesRepository } from '../../domain/ports/suscripciones.repository.interface';
 import { IPlanesService } from '../../../planes/application/services/planes.service.interface';
 import { IMercadoPagoService } from '../../../mercadopago/services/mercadopago.service.interface';
@@ -108,4 +110,36 @@ describe('SuscripcionesService', () => {
       ),
     ).rejects.toThrow(PlanNotFoundException);
   });
+
+  it('debe arrojar InternalServerErrorException si falla Mercado Pago', async () => {
+    const planMock = {
+      id_plan_comunidad: 'plan-123',
+      mp_preapproval_plan_id: 'mp-plan-123',
+    } as any;
+
+    planesServiceMock.getPlan.mockResolvedValue(planMock);
+    mpServiceMock.createSubscription.mockRejectedValue(
+      new InternalServerErrorException('Error de comunicación con la pasarela de pagos. No se pudo procesar la suscripción.')
+    );
+
+    let errorThrown: any = null;
+    try {
+      await service.crearSuscripcion(
+        {
+          id_plan_comunidad: 'plan-123',
+          token_tarjeta: 'token-123',
+          email: 'test@email.com',
+        },
+        'user-123',
+      );
+    } catch (err) {
+      errorThrown = err;
+    }
+
+    expect(errorThrown).toBeInstanceOf(InternalServerErrorException);
+    expect(errorThrown.message).toBe('Error de comunicación con la pasarela de pagos. No se pudo procesar la suscripción.');
+  });
 });
+
+
+

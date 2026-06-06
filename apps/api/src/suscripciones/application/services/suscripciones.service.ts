@@ -43,6 +43,8 @@ export class SuscripcionesService implements ISuscripcionesService {
         command.token_tarjeta,
       );
 
+
+
     // 3. Resolver el UUID del estado PENDIENTE de forma dinámica
     const id_estado_pendiente =
       await this.suscripcionesRepository.buscarEstadoIdPorNombre('pending');

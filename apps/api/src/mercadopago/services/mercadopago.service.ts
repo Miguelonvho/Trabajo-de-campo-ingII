@@ -1,4 +1,4 @@
-import { Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, Logger, HttpException, HttpStatus, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
 import { MercadoPagoConfig, PreApprovalPlan } from 'mercadopago'; // SDK real para planes
@@ -90,19 +90,32 @@ export class MercadoPagoService implements IMercadoPagoService {
     email: string,
     cardTokenId: string,
   ): Promise<{ mp_subscription_id: string; init_point?: string }> {
-    // Generación de UUID único para evitar colisiones
-    const mockSubId = randomUUID();
-    const mockInitPoint = `http://localhost:3000/simulador-pago?subscription_id=${mockSubId}`;
+    try {
+      // Para simular errores de red o pasarela
+      if (cardTokenId === 'mock_token_fail' || cardTokenId === 'mock_token_fail_gateway') {
+        throw new Error('Fallo simulado de conexión con Mercado Pago');
+      }
 
-    this.logger.log(
-      `[SIMULACIÓN MP] Suscribiendo a ${email} al Plan ${planId} (Token Tarjeta: ${cardTokenId}). UUID generado: ${mockSubId}`,
-    );
+      // Generación de UUID único para evitar colisiones
+      const mockSubId = randomUUID();
+      const mockInitPoint = `http://localhost:3000/simulador-pago?subscription_id=${mockSubId}`;
 
-    return {
-      mp_subscription_id: mockSubId,
-      init_point: mockInitPoint,
-    };
+      this.logger.log(
+        `[SIMULACIÓN MP] Suscribiendo a ${email} al Plan ${planId} (Token Tarjeta: ${cardTokenId}). UUID generado: ${mockSubId}`,
+      );
+
+      return {
+        mp_subscription_id: mockSubId,
+        init_point: mockInitPoint,
+      };
+    } catch (error) {
+      this.logger.error('Fallo al comunicarse con la API de Mercado Pago', error);
+      throw new InternalServerErrorException(
+        'Error de comunicación con la pasarela de pagos. No se pudo procesar la suscripción.',
+      );
+    }
   }
+
 
   /**
    * [SIMULADO] Simula la recuperación de los datos del pago para el webhook.
