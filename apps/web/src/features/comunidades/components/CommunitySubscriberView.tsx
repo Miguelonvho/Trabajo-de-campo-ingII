@@ -21,11 +21,12 @@ interface Props {
   comunidad: IComunidad;
   planesComunidad: IPlanComunidad[];
   slug: string;
+  errorPlanes?: string | null;
 }
 
 type TabType = 'comunidad' | 'aulas' | 'miembros' | 'about';
 
-export function CommunitySubscriberView({ comunidad, planesComunidad, slug }: Props) {
+export function CommunitySubscriberView({ comunidad, planesComunidad, slug, errorPlanes }: Props) {
   const [activeTab, setActiveTab] = useState<TabType>('comunidad');
 
   // Datos mockeados realistas para dar una estética de alta gama
@@ -382,7 +383,14 @@ export function CommunitySubscriberView({ comunidad, planesComunidad, slug }: Pr
                 </p>
               </div>
 
-              {planesComunidad.length > 0 && (
+              {errorPlanes ? (
+                <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-md space-y-6">
+                  <h3 className="text-lg font-black text-slate-950 tracking-tight">Tus planes activos</h3>
+                  <div className="bg-slate-50 border border-slate-150 rounded-2xl p-6 text-center">
+                    <p className="text-slate-500 font-bold text-sm">{errorPlanes}</p>
+                  </div>
+                </div>
+              ) : planesComunidad.length > 0 && (
                 <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-md space-y-6">
                   <h3 className="text-lg font-black text-slate-950 tracking-tight">Tus planes activos</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

@@ -15,7 +15,7 @@ import { CicloPago } from '../../domain/entities/ciclo-pago.entity';
 import { MONEDAS, MAP_CICLOS_PAGO } from '../../../common/constants/planes';
 import { IPlanesRepository } from '../../domain/ports/planes.repository.interface';
 import { IPlanesService } from './planes.service.interface';
-import { PlanNotFoundException } from '../../domain/exceptions';
+import { PlanNotFoundException, SinPlanesDisponiblesException } from '../../domain/exceptions';
 
 /**
  * Servicio encargado de la lógica de negocio para la gestión de Planes.
@@ -115,7 +115,12 @@ export class PlanesService implements IPlanesService {
   public async getPlanesPorComunidad(
     id_comunidad: string,
   ): Promise<PlanComunidad[]> {
-    return this.planesRepository.buscarPlanesPorComunidad(id_comunidad);
+    const planes = await this.planesRepository.buscarPlanesPorComunidad(id_comunidad);
+    const activePlanes = planes.filter((p) => p.activa);
+    if (activePlanes.length === 0) {
+      throw new SinPlanesDisponiblesException();
+    }
+    return planes;
   }
 
   /**
@@ -125,11 +130,15 @@ export class PlanesService implements IPlanesService {
    * @returns La entidad PlanComunidad encontrada.
    * @throws {PlanNotFoundException} Si el plan no existe.
    */
-  public async getPlan(id: string): Promise<PlanComunidad> {
+  public async getPlan(id: string, onlyActive = false): Promise<PlanComunidad> {
     const plan = await this.planesRepository.buscarPlanPorId(id);
-    if (!plan) throw new PlanNotFoundException(id);
+    if (!plan || (onlyActive && !plan.activa)) {
+      throw new PlanNotFoundException(id);
+    }
     return plan;
   }
+
+
 
   /**
    * Desactiva un plan realizando una baja lógica.

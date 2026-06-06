@@ -16,6 +16,8 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { IPlanesService } from '../../application/services/planes.service.interface';
+import { PlanNotFoundException } from '../../domain/exceptions';
+
 import { CrearPlanDto } from '../dtos/crear-plan.dto';
 import { ICreatePlanResponse } from '@repo/types';
 import { PlanResponseDto } from '../dtos/plan-response.dto';
@@ -84,9 +86,10 @@ export class PlanesController {
    */
   @Get(':id')
   public async getPlan(@Param('id') id: string): Promise<PlanResponseDto> {
-    const resultado = await this.planesService.getPlan(id);
+    const resultado = await this.planesService.getPlan(id, true);
     return PlanResponseDto.fromEntity(resultado);
   }
+
 
   /**
    * Obtiene la lista de planes asociados a una comunidad.

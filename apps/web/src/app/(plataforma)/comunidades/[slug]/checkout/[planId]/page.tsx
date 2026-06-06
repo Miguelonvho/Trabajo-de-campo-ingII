@@ -18,34 +18,61 @@ export default async function CheckoutPage({ params }: Props) {
   const { slug, planId } = await params;
 
   let comunidad: IComunidad;
-  let plan: IPlanComunidad;
+  let plan: IPlanComunidad | null = null;
   let userEmail = '';
+  let errorMsg: string | null = null;
 
   try {
-    // 1. Obtener la comunidad por slug
     comunidad = await comunidadService.getComunidadBySlug(slug);
-    
-    // 2. Obtener el plan de suscripción por ID
-    plan = await planService.getPlan(planId);
+  } catch (error) {
+    console.error('Error al cargar comunidad en checkout:', error);
+    return notFound();
+  }
 
+  try {
+    plan = await planService.getPlan(planId);
+    
     // Validamos que el plan pertenezca a esta comunidad
     if (String(plan.id_comunidad) !== String(comunidad.id_comunidad)) {
-      console.warn('El plan solicitado no corresponde a la comunidad especificada.');
-      return notFound();
+      throw new Error('Plan no disponible');
     }
+  } catch (error: any) {
+    if (error.message === 'Plan no disponible') {
+      errorMsg = error.message;
+    } else {
+      console.error('Error al cargar plan en checkout:', error);
+      errorMsg = 'Plan no disponible';
+    }
+  }
 
-    // 3. Obtener el perfil del usuario autenticado para extraer el email
-    try {
-      const perfil = await authService.getPerfil();
-      userEmail = perfil.email || '';
-    } catch (err) {
-      console.error('Error cargando el perfil del usuario autenticado en checkout:', err);
-      // Fallback por si la cookie no está o falló la API
-      userEmail = 'invitado@komu.com';
-    }
-  } catch (error) {
-    console.error('Error cargando los datos en la página de checkout:', error);
-    return notFound();
+  if (errorMsg) {
+    return (
+      <div className="min-h-screen bg-slate-50/50 py-24 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
+        <div className="max-w-md w-full bg-white rounded-[40px] p-10 border border-slate-100 shadow-xl shadow-slate-200/50 text-center space-y-6 animate-fade-in">
+          <div className="w-16 h-16 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto">
+            <Sparkles size={28} className="text-amber-500 fill-amber-500/20" />
+          </div>
+          <h2 className="text-2xl font-black text-slate-950 tracking-tight">{errorMsg}</h2>
+          <Link 
+            href={`/comunidades/${slug}`}
+            className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-slate-900 text-white font-black rounded-2xl hover:bg-slate-800 hover:-translate-y-0.5 transition-all text-sm shadow-md duration-200 active:scale-95"
+          >
+            Volver a la comunidad
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // Si no hay error, plan no es nulo
+  const safePlan = plan!;
+
+  try {
+    const perfil = await authService.getPerfil();
+    userEmail = perfil.email || '';
+  } catch (err) {
+    console.error('Error cargando el perfil del usuario autenticado en checkout:', err);
+    userEmail = 'invitado@komu.com';
   }
 
   const formatFrecuencia = (ciclo: IPlanComunidad['ciclo_pago']) => {
@@ -56,7 +83,8 @@ export default async function CheckoutPage({ params }: Props) {
     return `Cada ${ciclo.frecuencia} ${unidad}`;
   };
 
-  const planPriceNumber = Number(plan.precio);
+  const planPriceNumber = Number(safePlan.precio);
+
 
   return (
     <div className="min-h-screen bg-slate-50/50 py-24 px-4 sm:px-6 lg:px-8">
@@ -98,16 +126,16 @@ export default async function CheckoutPage({ params }: Props) {
             <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-xl shadow-slate-200/30 space-y-6">
               <div className="space-y-2">
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Plan Seleccionado</p>
-                <h3 className="text-2xl font-black text-slate-950 tracking-tight">{plan.titulo}</h3>
+                <h3 className="text-2xl font-black text-slate-950 tracking-tight">{safePlan.titulo}</h3>
                 <p className="text-slate-500 text-sm font-medium">
-                  {plan.descripcion || 'Sin descripción adicional'}
+                  {safePlan.descripcion || 'Sin descripción adicional'}
                 </p>
               </div>
 
               <div className="flex items-end gap-1.5 pt-4 border-t border-slate-50">
                 <span className="text-4xl font-black text-slate-950">${planPriceNumber.toLocaleString('es-AR')}</span>
                 <span className="text-slate-400 text-sm font-bold mb-1">
-                  ARS / {formatFrecuencia(plan.ciclo_pago).toLowerCase()}
+                  ARS / {formatFrecuencia(safePlan.ciclo_pago).toLowerCase()}
                 </span>
               </div>
 
@@ -148,10 +176,11 @@ export default async function CheckoutPage({ params }: Props) {
               planId={planId}
               email={userEmail}
               slug={slug}
-              planName={plan.titulo}
+              planName={safePlan.titulo}
               planPrice={planPriceNumber}
             />
           </div>
+
 
         </div>
 

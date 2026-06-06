@@ -6,9 +6,10 @@ interface Props {
   comunidad: IComunidad;
   planesComunidad: IPlanComunidad[];
   slug: string;
+  errorPlanes?: string | null;
 }
 
-export function CommunityVisitorView({ comunidad, planesComunidad, slug }: Props) {
+export function CommunityVisitorView({ comunidad, planesComunidad, slug, errorPlanes }: Props) {
   const formatFrecuencia = (ciclo: IPlanComunidad['ciclo_pago']) => {
     if (!ciclo) return 'Mensual';
     const unidad = ciclo.tipo_frecuencia === 'months' ? 'meses' : 'días';
@@ -91,51 +92,60 @@ export function CommunityVisitorView({ comunidad, planesComunidad, slug }: Props
             <h2 className="text-2xl font-black text-slate-950 tracking-tight">Planes de Suscripción</h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {planesComunidad.map((plan: IPlanComunidad) => (
-              <div key={plan.id_plan_comunidad} className="bg-white p-8 rounded-3xl border border-slate-100 shadow-md relative overflow-hidden group hover:shadow-xl transition-all duration-300">
-                <div className="absolute top-0 right-0 p-4">
-                  <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border ${
-                    plan.activa 
-                      ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
-                      : 'bg-slate-100 text-slate-500 border-slate-200'
-                  }`}>
-                    {plan.activa ? 'Activo' : 'Inactivo'}
-                  </span>
-                </div>
-                <div className="space-y-4">
-                  <h3 className="text-xl font-black text-slate-950">{plan.titulo}</h3>
-                  <p className="text-slate-500 text-sm font-medium line-clamp-2">
-                    {plan.descripcion || 'Sin descripción'}
-                  </p>
-                  <div className="pt-4 flex items-end gap-1">
-                    <span className="text-3xl font-black text-slate-950">${Number(plan.precio).toFixed(0)}</span>
-                    <span className="text-slate-400 text-sm font-bold mb-1">
-                      / {formatFrecuencia(plan.ciclo_pago).toLowerCase()}
+          {errorPlanes ? (
+            <div className="bg-white/80 border border-slate-150 rounded-[32px] p-12 text-center shadow-lg shadow-slate-100/50 max-w-lg mx-auto space-y-4 animate-fade-in">
+              <div className="w-16 h-16 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto mb-4">
+                <CreditCard size={28} />
+              </div>
+              <p className="text-slate-900 font-extrabold text-xl tracking-tight">{errorPlanes}</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {planesComunidad.map((plan: IPlanComunidad) => (
+                <div key={plan.id_plan_comunidad} className="bg-white p-8 rounded-3xl border border-slate-100 shadow-md relative overflow-hidden group hover:shadow-xl transition-all duration-300">
+                  <div className="absolute top-0 right-0 p-4">
+                    <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border ${
+                      plan.activa 
+                        ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
+                        : 'bg-slate-100 text-slate-500 border-slate-200'
+                    }`}>
+                      {plan.activa ? 'Activo' : 'Inactivo'}
                     </span>
                   </div>
+                  <div className="space-y-4">
+                    <h3 className="text-xl font-black text-slate-950">{plan.titulo}</h3>
+                    <p className="text-slate-500 text-sm font-medium line-clamp-2">
+                      {plan.descripcion || 'Sin descripción'}
+                    </p>
+                    <div className="pt-4 flex items-end gap-1">
+                      <span className="text-3xl font-black text-slate-950">${Number(plan.precio).toFixed(0)}</span>
+                      <span className="text-slate-400 text-sm font-bold mb-1">
+                        / {formatFrecuencia(plan.ciclo_pago).toLowerCase()}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="mt-8 pt-6 border-t border-slate-50 w-full">
+                    {plan.activa ? (
+                      <Link 
+                        href={`/comunidades/${slug}/checkout/${plan.id_plan_comunidad}`}
+                        className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-sky-600 text-white font-black rounded-2xl hover:bg-sky-500 hover:-translate-y-0.5 transition-all text-sm shadow-md shadow-sky-500/10 hover:shadow-sky-500/20 active:scale-95 duration-200"
+                      >
+                        <CreditCard size={18} />
+                        Suscribirse al Plan
+                      </Link>
+                    ) : (
+                      <button 
+                        disabled
+                        className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-slate-100 text-slate-400 font-bold rounded-2xl text-sm cursor-not-allowed"
+                      >
+                        No disponible
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <div className="mt-8 pt-6 border-t border-slate-50 w-full">
-                  {plan.activa ? (
-                    <Link 
-                      href={`/comunidades/${slug}/checkout/${plan.id_plan_comunidad}`}
-                      className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-sky-600 text-white font-black rounded-2xl hover:bg-sky-500 hover:-translate-y-0.5 transition-all text-sm shadow-md shadow-sky-500/10 hover:shadow-sky-500/20 active:scale-95 duration-200"
-                    >
-                      <CreditCard size={18} />
-                      Suscribirse al Plan
-                    </Link>
-                  ) : (
-                    <button 
-                      disabled
-                      className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-slate-100 text-slate-400 font-bold rounded-2xl text-sm cursor-not-allowed"
-                    >
-                      No disponible
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </section>
 
       </div>

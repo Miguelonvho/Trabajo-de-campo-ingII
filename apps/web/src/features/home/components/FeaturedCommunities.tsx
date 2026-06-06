@@ -7,12 +7,17 @@ import { IComunidad } from '@repo/types';
 export async function FeaturedCommunities() {
   // Obtener comunidades reales desde el servidor
   let comunidades: IComunidad[] = [];
+  let errorMsg: string | null = null;
   try {
     comunidades = await comunidadService.getComunidades();
     // Tomar solo las primeras 3 para el home
     comunidades = comunidades.slice(0, 3);
-  } catch (error) {
-    console.error('Error cargando comunidades destacadas:', error);
+  } catch (error: any) {
+    if (error.message === 'Sin comunidades activas') {
+      errorMsg = error.message;
+    } else {
+      console.error('Error cargando comunidades destacadas:', error);
+    }
   }
 
   return (
@@ -43,8 +48,8 @@ export async function FeaturedCommunities() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-20 bg-white rounded-3xl border border-slate-100 italic text-slate-400">
-            Cargando comunidades destacadas...
+          <div className="text-center py-20 bg-white rounded-3xl border border-slate-100 font-extrabold text-slate-500">
+            {errorMsg || 'Cargando comunidades destacadas...'}
           </div>
         )}
 

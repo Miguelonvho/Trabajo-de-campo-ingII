@@ -25,11 +25,12 @@ interface Props {
   comunidad: IComunidad;
   planesComunidad: IPlanComunidad[];
   slug: string;
+  errorPlanes?: string | null;
 }
 
 type TabType = 'comunidad' | 'aulas' | 'miembros' | 'about';
 
-export function CommunityAdminView({ comunidad, planesComunidad, slug }: Props) {
+export function CommunityAdminView({ comunidad, planesComunidad, slug, errorPlanes }: Props) {
   const [activeTab, setActiveTab] = useState<TabType>('comunidad');
 
   // Datos mockeados realistas para dar una estética de alta gama
@@ -426,38 +427,45 @@ export function CommunityAdminView({ comunidad, planesComunidad, slug }: Props) 
                     Añadir Plan
                   </Link>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {planesComunidad.map((plan) => (
-                    <div key={plan.id_plan_comunidad} className="border border-slate-150 p-6 rounded-2xl flex flex-col justify-between relative group">
-                      <div className="absolute top-4 right-4">
-                        <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full border ${
-                          plan.activa 
-                            ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
-                            : 'bg-slate-100 text-slate-500 border-slate-200'
-                        }`}>
-                          {plan.activa ? 'Activo' : 'Inactivo'}
-                        </span>
-                      </div>
-                      
-                      <div className="space-y-1">
-                        <h4 className="text-base font-black text-slate-950">{plan.titulo}</h4>
-                        <p className="text-slate-500 text-xs font-medium line-clamp-2 pr-12">{plan.descripcion || 'Sin descripción'}</p>
-                      </div>
+                {errorPlanes ? (
+                  <div className="border border-dashed border-slate-200 rounded-2xl p-8 text-center bg-slate-50/50">
+                    <p className="text-slate-500 font-bold text-sm">{errorPlanes}</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
-                      <div className="mt-6 pt-4 border-t border-slate-50 flex items-center justify-between">
-                        <div className="flex items-baseline gap-1">
-                          <span className="text-lg font-black text-slate-950">${Number(plan.precio).toFixed(0)}</span>
-                          <span className="text-slate-400 text-xs font-bold">
-                            / {plan.ciclo_pago?.tipo_frecuencia === 'months' ? 'mes' : 'día'}
-                          </span>
-                        </div>
-                        <button title="Editar Plan" className="p-2 bg-slate-50 hover:bg-slate-100 border border-slate-100 text-slate-500 hover:text-indigo-650 rounded-xl transition-all">
-                          <Settings size={14} />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                     {planesComunidad.map((plan) => (
+                       <div key={plan.id_plan_comunidad} className="border border-slate-150 p-6 rounded-2xl flex flex-col justify-between relative group">
+                         <div className="absolute top-4 right-4">
+                           <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full border ${
+                             plan.activa 
+                               ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
+                               : 'bg-slate-100 text-slate-500 border-slate-200'
+                           }`}>
+                             {plan.activa ? 'Activo' : 'Inactivo'}
+                           </span>
+                         </div>
+                         
+                         <div className="space-y-1">
+                           <h4 className="text-base font-black text-slate-950">{plan.titulo}</h4>
+                           <p className="text-slate-500 text-xs font-medium line-clamp-2 pr-12">{plan.descripcion || 'Sin descripción'}</p>
+                         </div>
+
+                         <div className="mt-6 pt-4 border-t border-slate-50 flex items-center justify-between">
+                           <div className="flex items-baseline gap-1">
+                             <span className="text-lg font-black text-slate-950">${Number(plan.precio).toFixed(0)}</span>
+                             <span className="text-slate-400 text-xs font-bold">
+                               / {plan.ciclo_pago?.tipo_frecuencia === 'months' ? 'mes' : 'día'}
+                             </span>
+                           </div>
+                           <button title="Editar Plan" className="p-2 bg-slate-50 hover:bg-slate-100 border border-slate-100 text-slate-500 hover:text-indigo-650 rounded-xl transition-all">
+                             <Settings size={14} />
+                           </button>
+                         </div>
+                       </div>
+                     ))}
+                   </div>
+                 )}
               </div>
             </div>
 

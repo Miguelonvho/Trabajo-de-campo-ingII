@@ -5,7 +5,7 @@ import {
   HttpException,
 } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
-import { ComunidadNotFoundException } from '../../domain/exceptions';
+import { ComunidadNotFoundException, SinComunidadesActivasException } from '../../domain/exceptions';
 import { IMiembroService } from '../../../miembro/application/services/miembro.service.interface';
 import { Comunidad } from '../../domain/entities/comunidad.entity';
 import { ROLES } from '../../../common/constants/roles';
@@ -90,7 +90,11 @@ export class ComunidadService implements IComunidadService {
    * @returns Una promesa que resuelve con un arreglo de objetos IComunidad.
    */
   public async getComunidades(): Promise<Comunidad[]> {
-    return this.comunidadRepository.buscarComunidadesActivas();
+    const comunidades = await this.comunidadRepository.buscarComunidadesActivas();
+    if (comunidades.length === 0) {
+      throw new SinComunidadesActivasException();
+    }
+    return comunidades;
   }
 
   /**

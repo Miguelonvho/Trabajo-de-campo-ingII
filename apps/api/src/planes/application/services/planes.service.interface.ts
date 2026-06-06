@@ -35,13 +35,11 @@ export abstract class IPlanesService {
     id_comunidad: string,
   ): Promise<PlanComunidad[]>;
 
-  /**
-   * Obtiene un plan por su identificador único.
-   *
-   * @param id - ID del plan.
-   * @returns Una promesa con la entidad del plan.
-   */
-  public abstract getPlan(id: string): Promise<PlanComunidad>;
+  public abstract getPlan(
+    id: string,
+    onlyActive?: boolean,
+  ): Promise<PlanComunidad>;
+
 
   /**
    * Desactiva un plan de suscripción.
