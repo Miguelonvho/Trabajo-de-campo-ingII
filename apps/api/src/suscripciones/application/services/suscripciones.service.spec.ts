@@ -93,7 +93,9 @@ describe('SuscripcionesService', () => {
   });
 
   it('debe arrojar PlanNotFoundException si el plan no existe', async () => {
-    planesServiceMock.getPlan.mockRejectedValue(new PlanNotFoundException('plan-invalid'));
+    planesServiceMock.getPlan.mockRejectedValue(
+      new PlanNotFoundException('plan-invalid'),
+    );
 
     await expect(
       service.crearSuscripcion(

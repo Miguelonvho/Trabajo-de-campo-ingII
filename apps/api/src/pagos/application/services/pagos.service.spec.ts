@@ -1,7 +1,8 @@
 jest.mock('@nestjs-cls/transactional', () => ({
-  Transactional: () => (target: any, key: string, descriptor: PropertyDescriptor) => {
-    return descriptor;
-  },
+  Transactional:
+    () => (target: any, key: string, descriptor: PropertyDescriptor) => {
+      return descriptor;
+    },
 }));
 
 import { Test, TestingModule } from '@nestjs/testing';
@@ -58,7 +59,7 @@ describe('PagosService', () => {
   it('debe ignorar el procesamiento si el pago ya existe (idempotencia)', async () => {
     pagosRepoMock.buscarPagoPorMpId.mockResolvedValue({} as any);
 
-    await service.procesarNotificacionPago('mp-payment-123');
+    await service.procesarPago('mp-payment-123');
 
     expect(mpServiceMock.getPayment).not.toHaveBeenCalled();
   });
@@ -100,7 +101,7 @@ describe('PagosService', () => {
     Pago.events.subscribe('pagoAprobado', mockListener);
 
     // 3. Ejecutar el webhook
-    await service.procesarNotificacionPago('mp-payment-123');
+    await service.procesarPago('mp-payment-123');
 
     // 4. Verificar aserciones
     expect(pagosRepoMock.crearPago).toHaveBeenCalled();

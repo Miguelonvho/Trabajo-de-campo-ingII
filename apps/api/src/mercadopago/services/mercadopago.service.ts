@@ -113,7 +113,9 @@ export class MercadoPagoService implements IMercadoPagoService {
     const status = isRejected ? 'rejected' : 'approved';
     const baseId = isRejected ? paymentId.replace('_reject', '') : paymentId;
 
-    this.logger.log(`[SIMULACIÓN MP] Consultando detalles para el pago: ${paymentId} → simulando status: ${status}`);
+    this.logger.log(
+      `[SIMULACIÓN MP] Consultando detalles para el pago: ${paymentId} → simulando status: ${status}`,
+    );
 
     return {
       id: paymentId,

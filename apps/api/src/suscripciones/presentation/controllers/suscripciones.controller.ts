@@ -39,10 +39,13 @@ export class SuscripcionesController {
    * @param dto - Datos del plan y tarjeta de crédito tokenizada.
    * @param req - Objeto de petición HTTP conteniendo el usuario autenticado.
    */
-  @ApiOperation({ summary: 'Crea una intención de suscripción en Mercado Pago y localmente' })
+  @ApiOperation({
+    summary: 'Crea una intención de suscripción en Mercado Pago y localmente',
+  })
   @ApiResponse({
     status: 201,
-    description: 'La intención de suscripción ha sido registrada exitosamente en estado PENDIENTE.',
+    description:
+      'La intención de suscripción ha sido registrada exitosamente en estado PENDIENTE.',
     type: SuscripcionResponseDto,
   })
   @ApiResponse({ status: 401, description: 'No autorizado.' })

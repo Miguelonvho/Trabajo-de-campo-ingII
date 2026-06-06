@@ -35,9 +35,7 @@ import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 @ApiTags('Comunidades')
 @Controller('comunidades')
 export class ComunidadController {
-  public constructor(
-    private readonly comunidadService: IComunidadService,
-  ) { }
+  public constructor(private readonly comunidadService: IComunidadService) {}
 
   /**
    * Crea una nueva comunidad.
@@ -130,7 +128,9 @@ export class ComunidadController {
    * @param usuario - El usuario autenticado.
    * @returns El rol en la comunidad o null si no es miembro.
    */
-  @ApiOperation({ summary: 'Obtiene el rol del usuario autenticado en una comunidad' })
+  @ApiOperation({
+    summary: 'Obtiene el rol del usuario autenticado en una comunidad',
+  })
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Get('s/:slug/rol')

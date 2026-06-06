@@ -113,7 +113,10 @@ export class MiembroService implements IMiembroService {
     id_usuario: string,
     id_comunidad: string,
   ): Promise<Miembro | null> {
-    const miembro = await this.repository.buscarMiembroPorId(id_usuario, id_comunidad);
+    const miembro = await this.repository.buscarMiembroPorId(
+      id_usuario,
+      id_comunidad,
+    );
     if (miembro && !miembro.activo) {
       return null;
     }

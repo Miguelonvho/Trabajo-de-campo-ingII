@@ -55,23 +55,50 @@ export class Pago {
   }
 
   // Getters
-  public get id_pago(): string { return this._id_pago; }
-  public get id_suscripcion(): string { return this._id_suscripcion; }
-  public get monto(): number { return this._monto; }
-  public get monto_neto(): number | null | undefined { return this._monto_neto; }
-  public get mp_payment_id(): string | null | undefined { return this._mp_payment_id; }
-  public get id_estado(): string { return this._id_estado; }
-  public get fecha_pago(): Date | null | undefined { return this._fecha_pago; }
-  public get id_moneda(): string { return this._id_moneda; }
-  public get mp_payload_respuesta(): any | null | undefined { return this._mp_payload_respuesta; }
-  public get fecha_creacion(): Date { return this._fecha_creacion; }
-  public get fecha_actualizacion(): Date | null | undefined { return this._fecha_actualizacion; }
-  public get mp_payment_method_id(): string | null | undefined { return this._mp_payment_method_id; }
-  public get descripcion(): string | null | undefined { return this._descripcion; }
+  public get id_pago(): string {
+    return this._id_pago;
+  }
+  public get id_suscripcion(): string {
+    return this._id_suscripcion;
+  }
+  public get monto(): number {
+    return this._monto;
+  }
+  public get monto_neto(): number | null | undefined {
+    return this._monto_neto;
+  }
+  public get mp_payment_id(): string | null | undefined {
+    return this._mp_payment_id;
+  }
+  public get id_estado(): string {
+    return this._id_estado;
+  }
+  public get fecha_pago(): Date | null | undefined {
+    return this._fecha_pago;
+  }
+  public get id_moneda(): string {
+    return this._id_moneda;
+  }
+  public get mp_payload_respuesta(): any | null | undefined {
+    return this._mp_payload_respuesta;
+  }
+  public get fecha_creacion(): Date {
+    return this._fecha_creacion;
+  }
+  public get fecha_actualizacion(): Date | null | undefined {
+    return this._fecha_actualizacion;
+  }
+  public get mp_payment_method_id(): string | null | undefined {
+    return this._mp_payment_method_id;
+  }
+  public get descripcion(): string | null | undefined {
+    return this._descripcion;
+  }
 
   // Setters privados con validación
   private set id_suscripcion(value: string) {
-    if (!value) throw new DomainException('La suscripción asociada es obligatoria');
+    if (!value)
+      throw new DomainException('La suscripción asociada es obligatoria');
     this._id_suscripcion = value;
   }
 

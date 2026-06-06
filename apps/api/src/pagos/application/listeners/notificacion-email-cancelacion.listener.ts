@@ -7,7 +7,9 @@ import { IUsuariosService } from '../../../usuarios/services/usuarios.service.in
 import { IComunidadService } from '../../../comunidad/application/services/comunidad.service.interface';
 
 export class NotificacionEmailCancelacionListener implements PagoListener {
-  private readonly logger = new Logger(NotificacionEmailCancelacionListener.name);
+  private readonly logger = new Logger(
+    NotificacionEmailCancelacionListener.name,
+  );
 
   public constructor(
     private readonly suscripcionesRepository: ISuscripcionesRepository,
@@ -17,8 +19,10 @@ export class NotificacionEmailCancelacionListener implements PagoListener {
   ) {}
 
   public async update(pago: Pago): Promise<void> {
-    const suscripcion = await this.suscripcionesRepository
-      .buscarSuscripcionPorId(pago.id_suscripcion);
+    const suscripcion =
+      await this.suscripcionesRepository.buscarSuscripcionPorId(
+        pago.id_suscripcion,
+      );
 
     if (!suscripcion) return;
 
@@ -30,7 +34,7 @@ export class NotificacionEmailCancelacionListener implements PagoListener {
     if (!usuario || !plan) return;
 
     const comunidad = await this.comunidadService.getComunidad(
-      plan.id_comunidad
+      plan.id_comunidad,
     );
 
     if (!comunidad) return;

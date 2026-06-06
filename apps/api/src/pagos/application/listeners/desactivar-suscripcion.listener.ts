@@ -8,13 +8,15 @@ export class DesactivarSuscripcionListener implements PagoListener {
   ) {}
 
   public async update(pago: Pago): Promise<void> {
-    const suscripcion = await this.suscripcionesRepository
-      .buscarSuscripcionPorId(pago.id_suscripcion);
+    const suscripcion =
+      await this.suscripcionesRepository.buscarSuscripcionPorId(
+        pago.id_suscripcion,
+      );
 
     if (!suscripcion) return;
 
-    const idEstadoCancelada = await this.suscripcionesRepository
-      .buscarEstadoIdPorNombre('cancelled');
+    const idEstadoCancelada =
+      await this.suscripcionesRepository.buscarEstadoIdPorNombre('cancelled');
 
     if (!idEstadoCancelada) return;
 

@@ -7,7 +7,7 @@ export abstract class IPagosService {
    * Valida la legitimidad de la transacción, registra el cobro localmente y,
    * si se aprueba, activa los observadores asociados.
    *
-   * @param paymentId - ID único del pago devuelto por Mercado Pago.
+   * @param id_pago - ID único del pago devuelto por Mercado Pago.
    */
-  public abstract procesarNotificacionPago(paymentId: string): Promise<void>;
+  public abstract procesarPago(id_pago: string): Promise<void>;
 }

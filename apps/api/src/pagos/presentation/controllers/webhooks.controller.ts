@@ -33,30 +33,44 @@ export class WebhooksController {
         data: {
           type: 'object',
           properties: {
-            id: { type: 'string', example: 'ID_DE_LA_SUSCRIPCION_reject' }
-          }
-        }
-      }
-    }
+            id: { type: 'string', example: 'ID_DE_LA_SUSCRIPCION_reject' },
+          },
+        },
+      },
+    },
   })
   @Post('mercadopago')
   @HttpCode(HttpStatus.OK)
   public async recibirNotificacion(
     @Body() payload: any,
   ): Promise<{ recibido: boolean }> {
-    this.logger.log(`Notificación recibida en Webhook: ${JSON.stringify(payload)}`);
+    this.logger.log(
+      `Notificación recibida en Webhook: ${JSON.stringify(payload)}`,
+    );
 
     const type = payload.type || payload.action;
     // Mercado Pago envía el ID en payload.data.id para notificaciones de la API v2
-    const paymentId = payload.data?.id || payload.id;
+    const id_pago = payload.data?.id || payload.id;
 
-    if ((type === 'payment' || type === 'payment.created' || type === 'payment.updated') && paymentId) {
+    if (
+      (type === 'payment' ||
+        type === 'payment.created' ||
+        type === 'payment.updated') &&
+      id_pago
+    ) {
       // Disparar procesamiento asíncrono en background
-      this.pagosService.procesarNotificacionPago(paymentId.toString()).catch((err) => {
-        this.logger.error(`Error procesando cobro asíncrono para ID ${paymentId}:`, err);
-      });
+      this.pagosService
+        .procesarPago(id_pago.toString())
+        .catch((err) => {
+          this.logger.error(
+            `Error procesando cobro asíncrono para ID ${id_pago}:`,
+            err,
+          );
+        });
     } else {
-      this.logger.log(`Evento de webhook no soportado o ID de pago no provisto: type=${type}`);
+      this.logger.log(
+        `Evento de webhook no soportado o ID de pago no provisto: type=${type}`,
+      );
     }
 
     // Retorna de inmediato 200 OK para evitar bloqueos/reintentos de Mercado Pago

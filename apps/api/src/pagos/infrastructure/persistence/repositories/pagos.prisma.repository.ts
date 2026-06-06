@@ -79,7 +79,9 @@ export class PrismaPagosRepository implements IPagosRepository {
   /**
    * Obtiene dinámicamente el UUID del estado del pago buscando por su nombre.
    */
-  public async buscarEstadoIdPorNombre(estadoNombre: string): Promise<string | null> {
+  public async buscarEstadoIdPorNombre(
+    estadoNombre: string,
+  ): Promise<string | null> {
     const estado = await this.txHost.tx.estado_pago.findFirst({
       where: { estado: { equals: estadoNombre, mode: 'insensitive' } },
     });
@@ -90,7 +92,9 @@ export class PrismaPagosRepository implements IPagosRepository {
   /**
    * Obtiene dinámicamente el UUID de la moneda buscando por su descripción ISO (ej. 'ARS').
    */
-  public async buscarMonedaIdPorNombre(monedaNombre: string): Promise<string | null> {
+  public async buscarMonedaIdPorNombre(
+    monedaNombre: string,
+  ): Promise<string | null> {
     const res = await this.txHost.tx.moneda.findFirst({
       where: { moneda: { equals: monedaNombre, mode: 'insensitive' } },
     });

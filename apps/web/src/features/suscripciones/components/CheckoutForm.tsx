@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import { CreditCard, ShieldCheck, Loader2, ArrowRight, CheckCircle2, AlertCircle } from 'lucide-react';
+import { CreditCard, ShieldCheck, Loader2, AlertCircle } from 'lucide-react';
 import { crearSuscripcionAction, simularWebhookAction } from '../actions/suscripcionActions';
-import Link from 'next/link';
+import { validateCheckoutForm } from '../utils/cardValidation';
+import { MockCreditCard } from './MockCreditCard';
+import { CheckoutSuccessScreen } from './CheckoutSuccessScreen';
 
 interface CheckoutFormProps {
   planId: string;
@@ -59,21 +61,9 @@ export function CheckoutForm({ planId, email, slug, planName, planPrice }: Check
     e.preventDefault();
     setError(null);
 
-    // Basic Validation
-    if (cardNumber.replace(/\s/g, '').length < 16) {
-      setError('Por favor, ingresá los 16 dígitos de la tarjeta');
-      return;
-    }
-    if (!cardName.trim()) {
-      setError('Por favor, ingresá el nombre del titular');
-      return;
-    }
-    if (expiry.length < 5) {
-      setError('Por favor, ingresá una fecha de expiración válida (MM/AA)');
-      return;
-    }
-    if (cvv.length < 3) {
-      setError('Por favor, ingresá el código de seguridad (CVV)');
+    const validationError = validateCheckoutForm(cardNumber, cardName, expiry, cvv);
+    if (validationError) {
+      setError(validationError);
       return;
     }
 
@@ -122,154 +112,20 @@ export function CheckoutForm({ planId, email, slug, planName, planPrice }: Check
     }
   };
 
-  // Determinar la red de la tarjeta para mostrar logos visuales
-  const getCardType = () => {
-    const num = cardNumber.replace(/\s/g, '');
-    if (num.startsWith('4')) return 'Visa';
-    if (num.startsWith('5')) return 'Mastercard';
-    if (num.startsWith('3')) return 'Amex';
-    return 'Generic';
-  };
-
   if (success) {
-    return (
-      <div className="bg-white rounded-[32px] p-10 border border-slate-100 shadow-xl shadow-slate-200/50 flex flex-col items-center text-center space-y-6 animate-fade-in">
-        <div className="w-20 h-20 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center shadow-inner ring-8 ring-emerald-50/50 animate-bounce">
-          <CheckCircle2 size={44} className="stroke-[2.5]" />
-        </div>
-
-        <div className="space-y-2">
-          <h2 className="text-3xl font-black text-slate-950 tracking-tight">¡Suscripción Activada!</h2>
-          <p className="text-slate-500 font-medium max-w-md">
-            Tu pago por el plan <span className="text-slate-900 font-bold">{planName}</span> se procesó y aprobó con éxito mediante la simulación de Mercado Pago.
-          </p>
-        </div>
-
-        <div className="bg-slate-50 p-6 rounded-2xl w-full text-left space-y-3 border border-slate-100">
-          <div className="flex justify-between items-center text-sm">
-            <span className="text-slate-400 font-bold">Concepto:</span>
-            <span className="text-slate-900 font-bold">{planName}</span>
-          </div>
-          <div className="flex justify-between items-center text-sm">
-            <span className="text-slate-400 font-bold">Monto Cobrado:</span>
-            <span className="text-slate-900 font-black">${planPrice.toLocaleString('es-AR')} ARS</span>
-          </div>
-          <div className="flex justify-between items-center text-sm">
-            <span className="text-slate-400 font-bold">Estado:</span>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-100 text-emerald-700">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              ACTIVA
-            </span>
-          </div>
-        </div>
-
-        <Link
-          href={`/comunidades/${slug}`}
-          className="w-full flex items-center justify-center gap-2 px-8 py-4 bg-slate-950 text-white font-black rounded-2xl shadow-xl shadow-slate-950/10 hover:-translate-y-0.5 hover:bg-slate-900 transition-all text-base group"
-        >
-          Ingresar a la Comunidad
-          <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-        </Link>
-      </div>
-    );
+    return <CheckoutSuccessScreen planName={planName} planPrice={planPrice} slug={slug} />;
   }
 
   return (
     <div className="space-y-10">
-
-      {/* MOCKUP INTERACTIVO DE TARJETA 3D */}
-      <div className="perspective-1000 w-full max-w-[400px] mx-auto h-56 relative group">
-        <div
-          className={`w-full h-full rounded-[24px] duration-700 preserve-3d relative shadow-2xl ${isFlipped ? 'rotate-y-180' : ''
-            }`}
-        >
-          {/* FRENTE DE LA TARJETA */}
-          <div
-            className="absolute inset-0 backface-hidden rounded-[24px] p-6 text-white flex flex-col justify-between overflow-hidden shadow-inner"
-            style={{
-              background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #3b82f6 100%)',
-            }}
-          >
-            {/* Shimmer Effect */}
-            <div className="absolute inset-0 bg-linear-to-tr from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full duration-1500 transition-transform"></div>
-
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-[9px] uppercase tracking-widest text-slate-400 font-bold">Tarjeta de Simulación</p>
-                <div className="h-8 w-11 bg-amber-400/20 backdrop-blur-md rounded-md mt-1.5 relative overflow-hidden border border-amber-400/30 flex items-center justify-center">
-                  {/* Chip lines */}
-                  <div className="w-full h-[1px] bg-amber-400/20 absolute top-1/2"></div>
-                  <div className="w-full h-[1px] bg-amber-400/20 absolute top-1/3"></div>
-                  <div className="w-full h-[1px] bg-amber-400/20 absolute bottom-1/3"></div>
-                  <div className="h-full w-[1px] bg-amber-400/20 absolute left-1/2"></div>
-                </div>
-              </div>
-              <span className="font-display font-black italic text-lg tracking-tight">KOMU</span>
-            </div>
-
-            <div className="space-y-4">
-              {/* Número de Tarjeta */}
-              <p className="text-xl md:text-2xl font-mono tracking-widest font-medium">
-                {cardNumber || '•••• •••• •••• ••••'}
-              </p>
-
-              <div className="flex justify-between items-end">
-                {/* Titular */}
-                <div className="flex-1 mr-4">
-                  <p className="text-[7px] uppercase tracking-widest text-slate-400 font-bold">Titular</p>
-                  <p className="text-xs font-bold uppercase truncate tracking-wider">
-                    {cardName || 'Nombre del Titular'}
-                  </p>
-                </div>
-
-                {/* Vencimiento */}
-                <div className="shrink-0 text-right">
-                  <p className="text-[7px] uppercase tracking-widest text-slate-400 font-bold">Vence</p>
-                  <p className="text-xs font-mono font-bold">{expiry || 'MM/AA'}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Red / Tipo de Tarjeta */}
-            <div className="absolute right-6 top-6 opacity-85">
-              {getCardType() === 'Visa' && <span className="font-black italic text-xl">Visa</span>}
-              {getCardType() === 'Mastercard' && <span className="font-black italic text-xl">Mastercard</span>}
-              {getCardType() === 'Amex' && <span className="font-black italic text-xl">Amex</span>}
-            </div>
-          </div>
-
-          {/* DORSO DE LA TARJETA (CVV) */}
-          <div
-            className="absolute inset-0 backface-hidden rotate-y-180 rounded-[24px] py-6 text-white flex flex-col justify-between overflow-hidden shadow-inner"
-            style={{
-              background: 'linear-gradient(135deg, #020617 0%, #0f172a 100%)',
-            }}
-          >
-            <div className="w-full h-11 bg-slate-950 mt-2"></div>
-
-            <div className="px-6 space-y-4">
-              <div className="flex items-center gap-4">
-                {/* CVV Box */}
-                <div className="flex-1 h-10 bg-white rounded-md flex items-center justify-end px-3 text-slate-900 font-mono font-bold tracking-widest text-sm">
-                  {cvv || '•••'}
-                </div>
-                <div className="text-[8px] uppercase tracking-wider text-slate-400 font-bold w-24">
-                  Código de Seguridad
-                </div>
-              </div>
-
-              <p className="text-[8px] text-slate-500 font-medium leading-normal">
-                Esta tarjeta se utiliza exclusivamente para la simulación del flujo de Mercado Pago en Komu. No posee valor comercial real ni está vinculada a cuentas bancarias reales.
-              </p>
-            </div>
-
-            <div className="px-6 flex justify-between items-center">
-              <span className="text-[8px] text-slate-500 font-black tracking-widest">MOCK CARD</span>
-              <span className="font-display font-black italic text-xs tracking-tight text-slate-600">KOMU</span>
-            </div>
-          </div>
-        </div>
-      </div>
+      
+      <MockCreditCard 
+        cardNumber={cardNumber} 
+        cardName={cardName} 
+        expiry={expiry} 
+        cvv={cvv} 
+        isFlipped={isFlipped} 
+      />
 
       {/* FORMULARIO DE PAGO */}
       <form onSubmit={handleSubmit} className="space-y-6">

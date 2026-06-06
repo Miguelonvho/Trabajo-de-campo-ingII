@@ -13,13 +13,15 @@ export class RemoverMiembroComunidadListener implements PagoListener {
   ) {}
 
   public async update(pago: Pago): Promise<void> {
-    const suscripcion = await this.suscripcionesRepository
-      .buscarSuscripcionPorId(pago.id_suscripcion);
+    const suscripcion =
+      await this.suscripcionesRepository.buscarSuscripcionPorId(
+        pago.id_suscripcion,
+      );
 
     if (!suscripcion) return;
 
     const plan = await this.planesService.getPlan(
-      suscripcion.id_plan_comunidad
+      suscripcion.id_plan_comunidad,
     );
 
     try {
@@ -34,4 +36,3 @@ export class RemoverMiembroComunidadListener implements PagoListener {
     }
   }
 }
-

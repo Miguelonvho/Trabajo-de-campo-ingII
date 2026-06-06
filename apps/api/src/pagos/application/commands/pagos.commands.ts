@@ -3,7 +3,7 @@
  * desde la pasarela externa de Mercado Pago. Aísla la lógica de negocio de los detalles crudos del JSON.
  */
 export interface DatosPagoNotificado {
-  readonly paymentId: string;
+  readonly id_pago: string;
   readonly externalPreapprovalId: string;
   readonly amount: number;
   readonly netAmount: number | null;

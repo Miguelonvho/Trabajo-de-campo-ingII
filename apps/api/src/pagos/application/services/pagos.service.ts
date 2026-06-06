@@ -1,4 +1,8 @@
-import { Injectable, Logger, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { IPagosService } from './pagos.service.interface';
 import { IPagosRepository } from '../../domain/ports/pagos.repository.interface';
@@ -18,30 +22,30 @@ export class PagosService implements IPagosService {
     private readonly pagosRepository: IPagosRepository,
     private readonly suscripcionesRepository: ISuscripcionesRepository,
     private readonly mercadoPagoService: IMercadoPagoService,
-  ) {}
+  ) { }
 
   /**
    * Valida un pago proveniente de Mercado Pago y actualiza el estado de la suscripción asociada.
    */
   @Transactional()
-  public async procesarNotificacionPago(paymentId: string): Promise<void> {
-    this.logger.log(`Procesando notificación de pago: ${paymentId}`);
+  public async procesarPago(id_pago: string): Promise<void> {
 
     // 1. Evitar doble procesamiento (Idempotencia)
-    if (await this.esPagoDuplicado(paymentId)) {
+    if (await this.esPagoDuplicado(id_pago)) {
       return;
     }
 
     // 2. Obtener y aislar los detalles del pago de la pasarela de pagos
-    const datosPago = await this.obtenerDatosPagoNotificado(paymentId);
+    const datosPago = await this.obtenerDatosPago(id_pago);
     if (!datosPago) {
       return;
     }
 
     // 3. Buscar la suscripción asociada en la base de datos local
-    const suscripcion = await this.suscripcionesRepository.buscarSuscripcionPorMpId(
-      datosPago.externalPreapprovalId,
-    );
+    const suscripcion =
+      await this.suscripcionesRepository.buscarSuscripcionPorMpId(
+        datosPago.externalPreapprovalId,
+      );
     if (!suscripcion) {
       this.logger.warn(
         `No se encontró una suscripción local vinculada al preapproval_id ${datosPago.externalPreapprovalId}.`,
@@ -49,12 +53,30 @@ export class PagosService implements IPagosService {
       return;
     }
 
-    // 4. Inicializar y guardar la entidad de pago en estado PENDIENTE
-    const pago = await this.inicializarPagoEntidad(suscripcion.suscripcion_id, datosPago);
-    await this.pagosRepository.crearPago(pago);
+    // 4. Inicializar la entidad de pago en estado PENDIENTE en memoria
+    const pago = await this.inicializarPagoEntidad(
+      suscripcion.suscripcion_id,
+      datosPago,
+    );
 
-    // 5. Si el pago fue aprobado/rechazado, ejecutar el cambio de estado e iniciar observadores
-    await this.procesarTransicionDeEstado(pago, datosPago);
+
+    const status = datosPago.status;
+    if (status === 'approved' || status === 'rejected') {
+      const idEstado = await this.pagosRepository.buscarEstadoIdPorNombre(status);
+      if (!idEstado) {
+        throw new InternalServerErrorException(
+          `El estado ${status} no está configurado en BD`,
+        );
+      } else if (status === 'approved') {
+        await pago.aprobarPago(idEstado);
+      } else {
+        await pago.rechazarPago(idEstado);
+      }
+    }
+
+
+    // 6. Persistir el pago con su estado final en la base de datos (INSERT único)
+    await this.pagosRepository.crearPago(pago);
   }
 
   // --- Métodos de Ayuda Auxiliares para Modularizar y Cumplir SRP ---
@@ -62,10 +84,13 @@ export class PagosService implements IPagosService {
   /**
    * Verifica si el pago ya se encuentra registrado en el sistema local.
    */
-  private async esPagoDuplicado(paymentId: string): Promise<boolean> {
-    const pagoExistente = await this.pagosRepository.buscarPagoPorMpId(paymentId);
+  private async esPagoDuplicado(id_pago: string): Promise<boolean> {
+    const pagoExistente =
+      await this.pagosRepository.buscarPagoPorMpId(id_pago);
     if (pagoExistente) {
-      this.logger.log(`El pago con id de Mercado Pago ${paymentId} ya se encuentra registrado.`);
+      this.logger.log(
+        `El pago con id de Mercado Pago ${id_pago} ya se encuentra registrado.`,
+      );
       return true;
     }
     return false;
@@ -74,23 +99,29 @@ export class PagosService implements IPagosService {
   /**
    * Obtiene la información del pago desde Mercado Pago y la normaliza al formato interno de la aplicación.
    */
-  private async obtenerDatosPagoNotificado(paymentId: string): Promise<DatosPagoNotificado | null> {
+  private async obtenerDatosPago(
+    id_pago: string,
+  ): Promise<DatosPagoNotificado | null> {
     try {
-      const paymentData = await this.mercadoPagoService.getPayment(paymentId);
+      const paymentData = await this.mercadoPagoService.getPayment(id_pago);
       const preapprovalId =
-        paymentData.preapproval_id || (paymentData.metadata && paymentData.metadata.preapproval_id);
+        paymentData.preapproval_id ||
+        (paymentData.metadata && paymentData.metadata.preapproval_id);
 
       if (!preapprovalId) {
-        this.logger.warn(`El pago ${paymentId} no contiene un preapproval_id (suscripción asociada).`);
+        this.logger.warn(
+          `El pago ${id_pago} no contiene un preapproval_id (suscripción asociada).`,
+        );
         return null;
       }
 
       return {
-        paymentId,
+        id_pago,
         externalPreapprovalId: preapprovalId,
         amount: Number(paymentData.transaction_amount),
         netAmount:
-          paymentData.transaction_details && paymentData.transaction_details.net_received_amount
+          paymentData.transaction_details &&
+            paymentData.transaction_details.net_received_amount
             ? Number(paymentData.transaction_details.net_received_amount)
             : null,
         currencyCode: paymentData.currency_id || 'ARS',
@@ -100,7 +131,10 @@ export class PagosService implements IPagosService {
         rawPayload: paymentData,
       };
     } catch (error) {
-      this.logger.error(`Error al recuperar datos del pago ${paymentId} de Mercado Pago`, error);
+      this.logger.error(
+        `Error al recuperar datos del pago ${id_pago} de Mercado Pago`,
+        error,
+      );
       throw error;
     }
   }
@@ -108,9 +142,15 @@ export class PagosService implements IPagosService {
   /**
    * Resuelve identidades del sistema e inicializa la entidad Pago en estado PENDIENTE.
    */
-  private async inicializarPagoEntidad(suscripcionId: string, datos: DatosPagoNotificado): Promise<Pago> {
-    const idEstadoPendiente = await this.pagosRepository.buscarEstadoIdPorNombre('pending');
-    const idMoneda = await this.pagosRepository.buscarMonedaIdPorNombre(datos.currencyCode);
+  private async inicializarPagoEntidad(
+    suscripcionId: string,
+    datos: DatosPagoNotificado,
+  ): Promise<Pago> {
+    const idEstadoPendiente =
+      await this.pagosRepository.buscarEstadoIdPorNombre('pending');
+    const idMoneda = await this.pagosRepository.buscarMonedaIdPorNombre(
+      datos.currencyCode,
+    );
 
     if (!idEstadoPendiente || !idMoneda) {
       throw new InternalServerErrorException(
@@ -123,7 +163,7 @@ export class PagosService implements IPagosService {
       monto: datos.amount,
       id_moneda: idMoneda,
       id_estado_pendiente: idEstadoPendiente,
-      mp_payment_id: datos.paymentId,
+      mp_payment_id: datos.id_pago,
       monto_neto: datos.netAmount,
       mp_payload_respuesta: datos.rawPayload,
       mp_payment_method_id: datos.paymentMethodId,
@@ -131,29 +171,5 @@ export class PagosService implements IPagosService {
     });
   }
 
-  /**
-   * Ejecuta las transiciones de estado aprobadas o rechazadas de la entidad de pago y persiste la actualización.
-   */
-  private async procesarTransicionDeEstado(pago: Pago, datos: DatosPagoNotificado): Promise<void> {
-    if (datos.status === 'approved') {
-      const idEstadoAprobado = await this.pagosRepository.buscarEstadoIdPorNombre('approved');
-      if (!idEstadoAprobado) {
-        throw new InternalServerErrorException('El estado approved no está configurado en BD');
-      }
 
-      // El método aprobarPago cambia el estado de la entidad y lanza la notificación al manager
-      await pago.aprobarPago(idEstadoAprobado);
-
-      // Guardar la actualización de estado del pago
-      await this.pagosRepository.actualizarPago(pago);
-      this.logger.log(`Pago ${datos.paymentId} procesado y aprobado exitosamente.`);
-    } else if (datos.status === 'rejected') {
-      const idEstadoRechazado = await this.pagosRepository.buscarEstadoIdPorNombre('rejected');
-      if (idEstadoRechazado) {
-        await pago.rechazarPago(idEstadoRechazado);
-        await this.pagosRepository.actualizarPago(pago);
-      }
-      this.logger.log(`Pago ${datos.paymentId} procesado con estado rejected.`);
-    }
-  }
 }

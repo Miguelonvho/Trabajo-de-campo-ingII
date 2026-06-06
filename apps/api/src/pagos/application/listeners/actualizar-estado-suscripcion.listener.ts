@@ -14,14 +14,18 @@ export class ActualizarEstadoSuscripcionListener implements PagoListener {
    * Al ser notificado, busca la suscripción ligada al pago y la activa.
    */
   public async update(pago: Pago): Promise<void> {
-    const suscripcion = await this.suscripcionesRepository.buscarSuscripcionPorId(pago.id_suscripcion);
+    const suscripcion =
+      await this.suscripcionesRepository.buscarSuscripcionPorId(
+        pago.id_suscripcion,
+      );
     if (!suscripcion) {
       // Nota: Si no existe localmente, podríamos loguear el error o lanzar una excepción.
       return;
     }
 
     // Resolver dinámicamente el ID del estado 'active'
-    const idEstadoActiva = await this.suscripcionesRepository.buscarEstadoIdPorNombre('active');
+    const idEstadoActiva =
+      await this.suscripcionesRepository.buscarEstadoIdPorNombre('active');
     if (!idEstadoActiva) {
       return;
     }
@@ -31,7 +35,7 @@ export class ActualizarEstadoSuscripcionListener implements PagoListener {
     proximoCobro.setMonth(proximoCobro.getMonth() + 1);
 
     // Ejecutar lógica de dominio de activación de suscripción
-    suscripcion.activar(idEstadoActiva, proximoCobro);
+    suscripcion.activarSuscripcion(idEstadoActiva, proximoCobro);
 
     // Guardar cambios en persistencia
     await this.suscripcionesRepository.actualizarSuscripcion(suscripcion);
