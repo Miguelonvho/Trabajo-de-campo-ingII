@@ -16,7 +16,6 @@ export interface IEstadoPago {
 export interface IMoneda {
   id_moneda: string;
   moneda: string;
-  pago?: IPago[];
   plan_comunidad?: IPlanComunidad[];
 }
 
@@ -28,13 +27,11 @@ export interface IPago {
   mp_payment_id?: string | null;
   id_estado: string;
   fecha_pago?: string | Date | null;
-  id_moneda: string;
   mp_payload_respuesta?: any | null;
   fecha_creacion: string | Date;
   fecha_actualizacion?: string | Date | null;
   mp_payment_method_id?: string | null;
   descripcion?: string | null;
   estado_pago?: IEstadoPago;
-  moneda?: IMoneda;
   suscripcion?: ISuscripcion;
 }

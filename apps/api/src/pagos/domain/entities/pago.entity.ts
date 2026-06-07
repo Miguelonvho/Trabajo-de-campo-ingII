@@ -17,7 +17,7 @@ export class Pago {
   private _mp_payment_id?: string | null;
   private _id_estado: string;
   private _fecha_pago?: Date | null;
-  private _id_moneda: string;
+
   private _mp_payload_respuesta?: any | null;
   private _fecha_creacion: Date;
   private _fecha_actualizacion?: Date | null;
@@ -29,7 +29,6 @@ export class Pago {
     id_suscripcion: string;
     monto: number;
     id_estado: string;
-    id_moneda: string;
     fecha_creacion: Date;
     monto_neto?: number | null;
     mp_payment_id?: string | null;
@@ -43,7 +42,6 @@ export class Pago {
     this.id_suscripcion = props.id_suscripcion;
     this.monto = props.monto;
     this.id_estado = props.id_estado;
-    this.id_moneda = props.id_moneda;
     this._fecha_creacion = props.fecha_creacion;
     this._monto_neto = props.monto_neto;
     this._mp_payment_id = props.mp_payment_id;
@@ -76,9 +74,7 @@ export class Pago {
   public get fecha_pago(): Date | null | undefined {
     return this._fecha_pago;
   }
-  public get id_moneda(): string {
-    return this._id_moneda;
-  }
+
   public get mp_payload_respuesta(): any | null | undefined {
     return this._mp_payload_respuesta;
   }
@@ -112,10 +108,7 @@ export class Pago {
     this._id_estado = value;
   }
 
-  private set id_moneda(value: string) {
-    if (!value) throw new DomainException('La moneda es obligatoria');
-    this._id_moneda = value;
-  }
+
 
   // Factory Methods
   /**
@@ -124,7 +117,6 @@ export class Pago {
   public static crearPago(props: {
     id_suscripcion: string;
     monto: number;
-    id_moneda: string;
     id_estado_pendiente: string;
     mp_payment_id?: string | null;
     monto_neto?: number | null;
@@ -138,7 +130,6 @@ export class Pago {
       id_suscripcion: props.id_suscripcion,
       monto: props.monto,
       id_estado: props.id_estado_pendiente,
-      id_moneda: props.id_moneda,
       mp_payment_id: props.mp_payment_id,
       monto_neto: props.monto_neto,
       mp_payload_respuesta: props.mp_payload_respuesta,
@@ -155,7 +146,6 @@ export class Pago {
     id_suscripcion: string;
     monto: number;
     id_estado: string;
-    id_moneda: string;
     fecha_creacion: Date;
     monto_neto?: number | null;
     mp_payment_id?: string | null;

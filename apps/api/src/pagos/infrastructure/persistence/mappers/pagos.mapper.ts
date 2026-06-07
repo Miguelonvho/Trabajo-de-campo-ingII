@@ -17,7 +17,6 @@ export class PagosMapper {
       mp_payment_id: p.mp_payment_id,
       id_estado: p.id_estado,
       fecha_pago: p.fecha_pago ?? undefined,
-      id_moneda: p.id_moneda,
       mp_payload_respuesta: p.mp_payload_respuesta,
       fecha_creacion: p.fecha_creacion,
       fecha_actualizacion: p.fecha_actualizacion ?? undefined,

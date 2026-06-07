@@ -31,10 +31,4 @@ export abstract class IPagosRepository {
     estadoNombre: string,
   ): Promise<string | null>;
 
-  /**
-   * Busca dinámicamente el UUID de la moneda en la base de datos usando su código (ej: 'ARS').
-   */
-  public abstract buscarMonedaIdPorNombre(
-    monedaNombre: string,
-  ): Promise<string | null>;
 }

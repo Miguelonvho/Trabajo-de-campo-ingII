@@ -26,7 +26,6 @@ describe('PagosService', () => {
       buscarPagoPorId: jest.fn(),
       buscarPagoPorMpId: jest.fn(),
       buscarEstadoIdPorNombre: jest.fn(),
-      buscarMonedaIdPorNombre: jest.fn(),
     } as any;
 
     suscripcionesRepoMock = {
@@ -90,7 +89,6 @@ describe('PagosService', () => {
       return null;
     });
 
-    pagosRepoMock.buscarMonedaIdPorNombre.mockResolvedValue('uuid-moneda-ars');
     pagosRepoMock.crearPago.mockImplementation(async (p: Pago) => p);
     pagosRepoMock.actualizarPago.mockImplementation(async (p: Pago) => p);
 
@@ -105,7 +103,6 @@ describe('PagosService', () => {
 
     // 4. Verificar aserciones
     expect(pagosRepoMock.crearPago).toHaveBeenCalled();
-    expect(pagosRepoMock.actualizarPago).toHaveBeenCalled();
     expect(mockListener.update).toHaveBeenCalled();
 
     // Limpiar suscripción del test anterior

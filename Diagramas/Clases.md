@@ -126,7 +126,6 @@ class Pago {
   - mp_payment_id: string
   - estado: string
   - fecha_pago: Date
-  - moneda: string
   - mp_payload_respuesta: Json
   - fecha_creacion: DateTime
   - fecha_actualizacion: DateTime
@@ -134,7 +133,7 @@ class Pago {
   - descripcion: string
   --
   + crearPago(monto: number, monto_neto: number, mp_payment_id: string, estado: string,
-    fecha_pago: Date, moneda: string, mp_payload_respuesta: Json, fecha_creacion: DateTime, 
+    fecha_pago: Date, mp_payload_respuesta: Json, fecha_creacion: DateTime, 
     fecha_actualizacion: DateTime, mp_payment_method_id: string, descripcion: string): Pago
   + procesarPago(id_pago: string): void
   + aprobarPago(idEstadoAprobado: string): void
@@ -144,7 +143,7 @@ class Pago {
   - obtenerDatosPago(id_pago: string): { id_pago: string, externalPreapprovalId: string,
     amount: number, netAmount: number, currencyCode: string, paymentMethodId: string, description: string, status: string }
   - inicializarPagoEntidad(suscripcionId: string, id_pago: string, amount: number, netAmount: number,
-    currencyCode: string, paymentMethodId: string, description: string, status: string): Pago
+    paymentMethodId: string, description: string, status: string): Pago
 }
 
 class MercadoPago {

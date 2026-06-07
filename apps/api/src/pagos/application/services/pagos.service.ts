@@ -148,20 +148,16 @@ export class PagosService implements IPagosService {
   ): Promise<Pago> {
     const idEstadoPendiente =
       await this.pagosRepository.buscarEstadoIdPorNombre('pending');
-    const idMoneda = await this.pagosRepository.buscarMonedaIdPorNombre(
-      datos.currencyCode,
-    );
 
-    if (!idEstadoPendiente || !idMoneda) {
+    if (!idEstadoPendiente) {
       throw new InternalServerErrorException(
-        'Configuraciones iniciales de moneda o estados de pago no configuradas en BD',
+        'Configuraciones iniciales de estados de pago no configuradas en BD',
       );
     }
 
     return Pago.crearPago({
       id_suscripcion: suscripcionId,
       monto: datos.amount,
-      id_moneda: idMoneda,
       id_estado_pendiente: idEstadoPendiente,
       mp_payment_id: datos.id_pago,
       monto_neto: datos.netAmount,
