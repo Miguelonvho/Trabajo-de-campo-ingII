@@ -157,11 +157,60 @@ class MercadoPago {
   + getPayment(paymentId: string): any
 }
 
+class Curso {
+  - titulo: string
+  - descripcion: string
+  - imagen_url: string
+  - certificado_habilitado: boolean
+  - activa: boolean
+  - fecha_creacion: DateTime
+  - dificultad: string
+  --
+  + crearCurso(titulo: string, descripcion: string, imagen_url: string, certificado_habilitado: boolean, dificultad: string, id_comunidad: string): Curso
+  + getCursosPorComunidad(id_comunidad: string): Curso[]
+  + getCurso(id: string): Curso
+  + actualizarCurso(id: string, titulo: string, descripcion: string, imagen_url: string, certificado_habilitado: boolean, dificultad: string): void
+  + desactivarCurso(id: string): void
+  + reactivarCurso(id: string): void
+}
+
+class Modulo {
+  - titulo: string
+  - descripcion: string
+  - orden: int
+  - activa: boolean
+  - fecha_creacion: DateTime
+  --
+  + crearModulo(titulo: string, descripcion: string, orden: int, id_curso: string): Modulo
+  + getModulosPorCurso(id_curso: string): Modulo[]
+  + actualizarModulo(id: string, titulo: string, descripcion: string, orden: int): void
+  + desactivarModulo(id: string): void
+  + reactivarModulo(id: string): void
+}
+
+class Contenido {
+  - titulo: string
+  - descripcion: string
+  - orden: int
+  - activa: boolean
+  - fecha_creacion: DateTime
+  - url_contenido: string
+  - duracion: int
+  - tipo_contenido: string
+  --
+  + crearContenido(titulo: string, descripcion: string, orden: int, url_contenido: string, duracion: int, tipo_contenido: string, id_modulo: string): Contenido
+  + getContenidosPorModulo(id_modulo: string): Contenido[]
+  + actualizarContenido(id: string, titulo: string, descripcion: string, orden: int, url_contenido: string, duracion: int, tipo_contenido: string): void
+  + desactivarContenido(id: string): void
+  + reactivarContenido(id: string): void
+}
 
 ' Relaciones de Composición (Contenedor -> Contenido)
 Comunidad "1" *--> "*" Miembro : tiene >
 Comunidad "1" *--> "*" PlanComunidad : ofrece >
-
+Comunidad "1" *--> "*" Curso : ofrece >
+Curso "1" *--> "*" Modulo : se divide en >
+Modulo "1" *--> "*" Contenido : tiene >
 
 ' Relaciones de Asociación Unidireccional (Origen -> Destino)
 Miembro "*" --> "1" Usuario : referencia a >
