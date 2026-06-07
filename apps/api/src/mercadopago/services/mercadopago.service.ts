@@ -47,10 +47,8 @@ export class MercadoPagoService implements IMercadoPagoService {
         );
       }
 
-      this.logger.log(`[REAL MP] Plan creado con ID: ${response.id}`);
       return { mp_preapproval_plan_id: response.id };
     } catch (error) {
-      this.logger.error('Error al registrar plan en Mercado Pago', error);
       throw new HttpException(
         'No se pudo registrar el plan en Mercado Pago, intentá de nuevo',
         HttpStatus.BAD_GATEWAY,
