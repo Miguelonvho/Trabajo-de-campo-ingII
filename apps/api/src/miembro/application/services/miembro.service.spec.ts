@@ -133,7 +133,7 @@ describe('MiembroService - agregarMiembro()', () => {
 
         // ASSERT (Afirmar): Verificamos que se ejecutó lo que esperábamos
         expect(repoMock.crearMiembro).toHaveBeenCalledTimes(1); // Verificamos que se guardó en BD
-        
+
         // Extraemos el objeto que se le pasó a crearMiembro para validar sus campos
         const miembroCreado: Miembro = repoMock.crearMiembro.mock.calls[0][0];
         expect(miembroCreado.id_usuario).toBe(comandoValido.id_usuario);
@@ -144,7 +144,7 @@ describe('MiembroService - agregarMiembro()', () => {
 
     // ── CP2: usuario no existe ────────────────────────────────────────────────
     // Prueba de Regla de Negocio: Si el usuario no existe, debemos abortar.
-    it('CP2 - debe lanzar MiembroNoEncontradoException con mensaje "El usuario (ID: user-uuid-123) no es miembro de la comunidad (ID: comunidad-uuid-456)" cuando el usuario no existe en el sistema', async () => {
+    it('CP2 - debe lanzar MiembroNoEncontradoException : "El usuario (ID: user-uuid-123) no es miembro de la comunidad (ID: comunidad-uuid-456)" cuando el usuario no existe en el sistema', async () => {
         // ARRANGE: Simulamos que buscarPorId no encuentra a nadie
         usuariosServiceMock.buscarPorId.mockResolvedValue(null);
 
@@ -160,7 +160,7 @@ describe('MiembroService - agregarMiembro()', () => {
 
     // ── CP3: comunidad no existe ──────────────────────────────────────────────
     // Prueba de Regla de Negocio: Si la comunidad no existe, debemos abortar.
-    it('CP3 - debe lanzar ComunidadNoEncontradaException con mensaje "La comunidad no fue encontrada (ID: comunidad-uuid-456)" cuando la comunidad no existe', async () => {
+    it('CP3 - debe lanzar ComunidadNoEncontradaException : "La comunidad no fue encontrada (ID: comunidad-uuid-456)" cuando la comunidad no existe', async () => {
         // ARRANGE
         usuariosServiceMock.buscarPorId.mockResolvedValue(usuarioMock as any);
         repoMock.existeComunidad.mockResolvedValue(false); // La comunidad no existe
@@ -177,7 +177,7 @@ describe('MiembroService - agregarMiembro()', () => {
 
     // ── CP4: miembro ya activo ────────────────────────────────────────────────
     // Prueba de Regla de Negocio: No se puede agregar a alguien que ya está dentro.
-    it('CP4 - debe lanzar MiembroYaExistenteException con mensaje "El usuario (ID: user-uuid-123) ya es miembro de la comunidad (ID: comunidad-uuid-456)" cuando el usuario ya es miembro activo de la comunidad', async () => {
+    it('CP4 - debe lanzar MiembroYaExistenteException : "El usuario (ID: user-uuid-123) ya es miembro de la comunidad (ID: comunidad-uuid-456)" si el usuario ya es miembro activo', async () => {
         // ARRANGE: Creamos un objeto Miembro que representa que ya está activo
         const miembroActivo = Miembro.reconstituirMiembro({
             id_usuario: comandoValido.id_usuario,
@@ -225,7 +225,7 @@ describe('MiembroService - agregarMiembro()', () => {
         // ASSERT: Como ya existía, NO llamamos a crearMiembro, sino a actualizarMiembro
         expect(repoMock.actualizarMiembro).toHaveBeenCalledTimes(1);
         expect(repoMock.crearMiembro).not.toHaveBeenCalled();
-        
+
         // Validamos que la actualización cambió 'activo' a true y mantuvo el rol
         const miembroActualizado: Miembro = repoMock.actualizarMiembro.mock.calls[0][0];
         expect(miembroActualizado.activo).toBe(true);
@@ -264,7 +264,7 @@ describe('MiembroService - agregarMiembro()', () => {
         // ASSERT
         expect(repoMock.actualizarMiembro).toHaveBeenCalledTimes(1);
         expect(repoMock.crearMiembro).not.toHaveBeenCalled();
-        
+
         // Validamos que se reactivó y ADEMÁS se actualizó el rol al nuevo
         const miembroActualizado: Miembro = repoMock.actualizarMiembro.mock.calls[0][0];
         expect(miembroActualizado.activo).toBe(true);

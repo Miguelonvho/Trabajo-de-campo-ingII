@@ -154,7 +154,8 @@ describe('PagosService - procesarPago()', () => {
   });
 
   // ── CP4: estado 'pending' no configurado en BD ────────────────────────────
-  it('CP4 - debe lanzar InternalServerErrorException si el estado pending no está configurado en BD', async () => {
+  // El mensaje real del servicio es diferente al de suscripciones
+  it('CP4 - debe lanzar InternalServerErrorException con mensaje "Configuraciones iniciales de estados de pago no configuradas en BD" si el estado pending no está configurado', async () => {
     pagosRepoMock.buscarPagoPorMpId.mockResolvedValue(null);
     mpServiceMock.getPayment.mockResolvedValue(pagoMpAprobado);
     suscripcionesRepoMock.buscarSuscripcionPorMpId.mockResolvedValue(suscripcionMock as any);
@@ -163,11 +164,15 @@ describe('PagosService - procesarPago()', () => {
     await expect(service.procesarPago('mp-payment-123')).rejects.toThrow(
       InternalServerErrorException,
     );
+    await expect(service.procesarPago('mp-payment-123')).rejects.toThrow(
+      'Configuraciones iniciales de estados de pago no configuradas en BD',
+    );
     expect(pagosRepoMock.crearPago).not.toHaveBeenCalled();
   });
 
   // ── CP5: estado 'approved' no configurado en BD ───────────────────────────
-  it('CP5 - debe lanzar InternalServerErrorException si el estado approved no está configurado en BD', async () => {
+  // El mensaje es dinámico: "El estado ${status} no está configurado en BD"
+  it('CP5 - debe lanzar InternalServerErrorException con mensaje "El estado approved no está configurado en BD" si el estado approved no está en BD', async () => {
     pagosRepoMock.buscarPagoPorMpId.mockResolvedValue(null);
     mpServiceMock.getPayment.mockResolvedValue(pagoMpAprobado);
     suscripcionesRepoMock.buscarSuscripcionPorMpId.mockResolvedValue(suscripcionMock as any);
@@ -180,6 +185,9 @@ describe('PagosService - procesarPago()', () => {
 
     await expect(service.procesarPago('mp-payment-123')).rejects.toThrow(
       InternalServerErrorException,
+    );
+    await expect(service.procesarPago('mp-payment-123')).rejects.toThrow(
+      'El estado approved no está configurado en BD',
     );
   });
 
