@@ -163,12 +163,23 @@ export function EditCommunityForm({ categorias, comunidad }: EditCommunityFormPr
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) {
+                      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+                      const allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
+                      const extension = file.name.split('.').pop()?.toLowerCase();
+
+                      if (!allowedTypes.includes(file.type) || !extension || !allowedExtensions.includes(extension)) {
+                        setError('El formato del archivo no es válido. Solo se permiten imágenes (JPEG, PNG, WEBP)');
+                        e.target.value = '';
+                        return;
+                      }
+
                       if (file.size > 2 * 1024 * 1024) {
                         setError('El tamaño de la imagen no puede superar los 2MB');
                         e.target.value = '';
-                      } else {
-                        setError(null);
+                        return;
                       }
+
+                      setError(null);
                     }
                   }}
                 />
