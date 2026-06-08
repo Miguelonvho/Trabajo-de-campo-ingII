@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Image as ImageIcon, Layout, Type, ArrowRight, Loader2 } from 'lucide-react';
 import { crearComunidad } from '../actions/comunidadActions';
@@ -25,9 +25,12 @@ export function CreateCommunityForm({ categorias }: CreateCommunityFormProps) {
   const router = useRouter();
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isSubmittingRef = useRef(false);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     setIsPending(true);
     setError(null);
 
@@ -39,9 +42,11 @@ export function CreateCommunityForm({ categorias }: CreateCommunityFormProps) {
         router.push(`/comunidades/${result.slug}`);
       } else {
         setError(result.error || 'Error desconocido');
+        isSubmittingRef.current = false;
       }
     } catch {
       setError('Error al conectar con el servidor');
+      isSubmittingRef.current = false;
     } finally {
       setIsPending(false);
     }
