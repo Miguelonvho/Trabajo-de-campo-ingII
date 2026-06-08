@@ -1,9 +1,11 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { ISuscripcionesService } from './suscripciones.service.interface';
 import { ISuscripcionesRepository } from '../../domain/ports/suscripciones.repository.interface';
 import { IPlanesService } from '../../../planes/application/services/planes.service.interface';
 import { IMercadoPagoService } from '../../../mercadopago/services/mercadopago.service.interface';
+import { IMiembroService } from '../../../miembro/application/services/miembro.service.interface';
+import { MiembroNoEncontradoException } from '../../../miembro/domain/exceptions';
 import type { CrearSuscripcionCommand } from '../commands/suscripciones.commands';
 import { Suscripcion } from '../../domain/entities/suscripcion.entity';
 
@@ -16,6 +18,7 @@ export class SuscripcionesService implements ISuscripcionesService {
     private readonly suscripcionesRepository: ISuscripcionesRepository,
     private readonly planesService: IPlanesService,
     private readonly mercadoPagoService: IMercadoPagoService,
+    private readonly miembroService: IMiembroService,
   ) {}
 
   /**
@@ -70,6 +73,79 @@ export class SuscripcionesService implements ISuscripcionesService {
     } catch (error) {
       throw new InternalServerErrorException(
         'Error interno al guardar la suscripción, intente nuevamente',
+      );
+    }
+  }
+
+  /**
+   * Cancela una suscripción activa de forma lógica y segura.
+   *
+   * @param idSuscripcion - UUID de la suscripción a cancelar.
+   * @param idUsuario - UUID del usuario que solicita la cancelación.
+   */
+  @Transactional()
+  public async cancelarSuscripcion(
+    idSuscripcion: string,
+    idUsuario: string,
+  ): Promise<void> {
+    const suscripcion = await this.suscripcionesRepository.buscarSuscripcionPorId(idSuscripcion);
+    if (!suscripcion) {
+      throw new NotFoundException('Suscripción no encontrada');
+    }
+
+    if (suscripcion.id_usuario !== idUsuario) {
+      throw new ForbiddenException(
+        'No tienes permisos para cancelar esta suscripción',
+      );
+    }
+
+    const idEstadoCancelada = await this.suscripcionesRepository.buscarEstadoIdPorNombre('cancelled');
+    if (!idEstadoCancelada) {
+      throw new InternalServerErrorException(
+        'El estado de cancelación no se encuentra configurado en el sistema',
+      );
+    }
+
+    const plan = await this.planesService.getPlan(suscripcion.id_plan_comunidad);
+
+    suscripcion.cancelar(idEstadoCancelada);
+
+    try {
+      await this.suscripcionesRepository.actualizarSuscripcion(suscripcion);
+      
+      try {
+        await this.miembroService.removerMiembro({
+          id_usuario: suscripcion.id_usuario,
+          id_comunidad: plan.id_comunidad,
+        });
+      } catch (miembroError: any) {
+        if (!(miembroError instanceof MiembroNoEncontradoException)) {
+          throw miembroError;
+        }
+      }
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Error interno al procesar la cancelación de la suscripción, intente nuevamente',
+      );
+    }
+  }
+
+  /**
+   * Obtiene la suscripción activa de un usuario en una comunidad específica.
+   */
+  @Transactional()
+  public async obtenerSuscripcionActiva(
+    idComunidad: string,
+    idUsuario: string,
+  ): Promise<Suscripcion | null> {
+    try {
+      return await this.suscripcionesRepository.buscarSuscripcionActiva(
+        idComunidad,
+        idUsuario,
+      );
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Error interno al consultar la suscripción del usuario, intente nuevamente',
       );
     }
   }

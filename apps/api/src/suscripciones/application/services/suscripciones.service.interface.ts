@@ -15,4 +15,23 @@ export abstract class ISuscripcionesService {
     command: CrearSuscripcionCommand,
     idUsuario: string,
   ): Promise<Suscripcion>;
+
+  /**
+   * Cancela de forma lógica una suscripción existente y detiene cualquier simulación de cobro.
+   *
+   * @param idSuscripcion - Identificador único de la suscripción.
+   * @param idUsuario - ID del usuario que solicita la cancelación.
+   */
+  public abstract cancelarSuscripcion(
+    idSuscripcion: string,
+    idUsuario: string,
+  ): Promise<void>;
+
+  /**
+   * Obtiene la suscripción activa de un usuario en una comunidad específica.
+   */
+  public abstract obtenerSuscripcionActiva(
+    idComunidad: string,
+    idUsuario: string,
+  ): Promise<Suscripcion | null>;
 }

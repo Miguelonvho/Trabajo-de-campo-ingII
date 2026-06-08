@@ -8,10 +8,13 @@
  * 
  * 🚀 CÓMO EJECUTAR ESTAS PRUEBAS:
  * 
- * OPCIÓN 1 (Recomendada) - Ejecutar desde la raíz del monorepo usando pnpm:
+ * OPCIÓN 1 (Recomendada) - Ejecutar todas las pruebas desde la raíz:
  *   $ pnpm --filter api test -- src/suscripciones/application/services/suscripciones.service.spec.ts
  * 
- * OPCIÓN 2 - Moviéndote primero a la carpeta de la API:
+ * OPCIÓN 2 - Ejecutar solo las pruebas de "crearSuscripcion" (crear suscripción):
+ *   $ pnpm --filter api test -- src/suscripciones/application/services/suscripciones.service.spec.ts -t "crearSuscripcion"
+ * 
+ * OPCIÓN 3 - Moviéndose primero a la carpeta de la API:
  *   $ cd apps/api
  *   $ npm run test -- src/suscripciones/application/services/suscripciones.service.spec.ts
  * ============================================================================
@@ -28,12 +31,13 @@ jest.mock('@nestjs-cls/transactional', () => ({
 }));
 
 import { Test, TestingModule } from '@nestjs/testing';
-import { InternalServerErrorException } from '@nestjs/common';
+import { InternalServerErrorException, NotFoundException, ForbiddenException } from '@nestjs/common';
 
 import { SuscripcionesService } from './suscripciones.service';
 import { ISuscripcionesRepository } from '../../domain/ports/suscripciones.repository.interface';
 import { IPlanesService } from '../../../planes/application/services/planes.service.interface';
 import { IMercadoPagoService } from '../../../mercadopago/services/mercadopago.service.interface';
+import { IMiembroService } from '../../../miembro/application/services/miembro.service.interface';
 import { PlanNotFoundException } from '../../../planes/domain/exceptions';
 import { Suscripcion } from '../../domain/entities/suscripcion.entity';
 import type { CrearSuscripcionCommand } from '../commands/suscripciones.commands';
@@ -58,11 +62,12 @@ const planMock = {
 // ============================================================================
 // 3. SUITE DE PRUEBAS PARA SuscripcionesService
 // ============================================================================
-describe('SuscripcionesService - crearSuscripcion()', () => {
+describe('SuscripcionesService', () => {
   let service: SuscripcionesService;
   let repoMock: jest.Mocked<ISuscripcionesRepository>;
   let planesServiceMock: jest.Mocked<IPlanesService>;
   let mpServiceMock: jest.Mocked<IMercadoPagoService>;
+  let miembroServiceMock: jest.Mocked<IMiembroService>;
 
   // ============================================================================
   // CONFIGURACIÓN INICIAL (Se ejecuta ANTES de cada 'it')
@@ -75,6 +80,7 @@ describe('SuscripcionesService - crearSuscripcion()', () => {
       buscarSuscripcionPorId: jest.fn(),
       buscarSuscripcionPorMpId: jest.fn(),
       buscarEstadoIdPorNombre: jest.fn(),
+      buscarSuscripcionActiva: jest.fn(),
     } as any;
 
     planesServiceMock = {
@@ -93,6 +99,14 @@ describe('SuscripcionesService - crearSuscripcion()', () => {
       getPayment: jest.fn(),
     } as any;
 
+    miembroServiceMock = {
+      agregarMiembro: jest.fn(),
+      cambiarRolMiembro: jest.fn(),
+      esCreador: jest.fn(),
+      buscarMiembro: jest.fn(),
+      removerMiembro: jest.fn(),
+    } as any;
+
     // 2. Módulo de prueba
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -100,6 +114,7 @@ describe('SuscripcionesService - crearSuscripcion()', () => {
         { provide: ISuscripcionesRepository, useValue: repoMock },
         { provide: IPlanesService, useValue: planesServiceMock },
         { provide: IMercadoPagoService, useValue: mpServiceMock },
+        { provide: IMiembroService, useValue: miembroServiceMock },
       ],
     }).compile();
 
@@ -107,8 +122,9 @@ describe('SuscripcionesService - crearSuscripcion()', () => {
   });
 
   // ============================================================================
-  // CASOS DE PRUEBA (CP)
+  // PRUEBAS PARA crearSuscripcion()
   // ============================================================================
+  describe('crearSuscripcion()', () => {
 
   // ── CP1: flujo exitoso ────────────────────────────────────────────────────
   // Verifica el "Happy Path" de una suscripción
@@ -230,5 +246,121 @@ describe('SuscripcionesService - crearSuscripcion()', () => {
     await expect(
       service.crearSuscripcion(comandoValido, 'user-uuid-456'),
     ).rejects.toThrow('Error interno al guardar la suscripción, intente nuevamente');
+  });
+  });
+
+  // ============================================================================
+  // PRUEBAS PARA cancelarSuscripcion()
+  // ============================================================================
+  describe('cancelarSuscripcion()', () => {
+    it('debe lanzar NotFoundException cuando la suscripción no existe', async () => {
+      repoMock.buscarSuscripcionPorId.mockResolvedValue(null);
+
+      await expect(
+        service.cancelarSuscripcion('sub-uuid-123', 'user-uuid-456'),
+      ).rejects.toThrow(NotFoundException);
+
+      expect(repoMock.actualizarSuscripcion).not.toHaveBeenCalled();
+    });
+
+    it('debe lanzar ForbiddenException cuando el usuario no es el titular de la suscripción', async () => {
+      const suscripcionFicticia = Suscripcion.crearSuscripcion({
+        id_usuario: 'usuario-diferente',
+        id_plan_comunidad: 'plan-uuid',
+        id_estado_pendiente: 'pendiente-uuid',
+        mp_subscription_id: 'mp-sub-id',
+        init_point: 'init-point',
+        back_url: null,
+      });
+      repoMock.buscarSuscripcionPorId.mockResolvedValue(suscripcionFicticia);
+
+      await expect(
+        service.cancelarSuscripcion(suscripcionFicticia.suscripcion_id, 'user-uuid-456'),
+      ).rejects.toThrow(ForbiddenException);
+
+      expect(repoMock.actualizarSuscripcion).not.toHaveBeenCalled();
+    });
+
+    it('debe lanzar InternalServerErrorException cuando el estado cancelled no está configurado en la BD', async () => {
+      const suscripcionFicticia = Suscripcion.crearSuscripcion({
+        id_usuario: 'user-uuid-456',
+        id_plan_comunidad: 'plan-uuid',
+        id_estado_pendiente: 'pendiente-uuid',
+        mp_subscription_id: 'mp-sub-id',
+        init_point: 'init-point',
+        back_url: null,
+      });
+      repoMock.buscarSuscripcionPorId.mockResolvedValue(suscripcionFicticia);
+      repoMock.buscarEstadoIdPorNombre.mockResolvedValue(null);
+
+      await expect(
+        service.cancelarSuscripcion(suscripcionFicticia.suscripcion_id, 'user-uuid-456'),
+      ).rejects.toThrow(InternalServerErrorException);
+
+      expect(repoMock.actualizarSuscripcion).not.toHaveBeenCalled();
+    });
+
+    it('debe cancelar la suscripción correctamente cambiándola a estado cancelado y removiendo al miembro de la comunidad', async () => {
+      const suscripcionFicticia = Suscripcion.crearSuscripcion({
+        id_usuario: 'user-uuid-456',
+        id_plan_comunidad: 'plan-uuid',
+        id_estado_pendiente: 'pendiente-uuid',
+        mp_subscription_id: 'mp-sub-id',
+        init_point: 'init-point',
+        back_url: null,
+      });
+      repoMock.buscarSuscripcionPorId.mockResolvedValue(suscripcionFicticia);
+      repoMock.buscarEstadoIdPorNombre.mockResolvedValue('uuid-estado-cancelada');
+      planesServiceMock.getPlan.mockResolvedValue({
+        id_plan_comunidad: 'plan-uuid',
+        id_comunidad: 'comunidad-uuid-123',
+      } as any);
+      repoMock.actualizarSuscripcion.mockImplementation(async (s) => s);
+      miembroServiceMock.removerMiembro.mockResolvedValue(undefined);
+
+      await service.cancelarSuscripcion(suscripcionFicticia.suscripcion_id, 'user-uuid-456');
+
+      expect(suscripcionFicticia.id_estado).toBe('uuid-estado-cancelada');
+      expect(repoMock.actualizarSuscripcion).toHaveBeenCalledWith(suscripcionFicticia);
+      expect(miembroServiceMock.removerMiembro).toHaveBeenCalledWith({
+        id_usuario: 'user-uuid-456',
+        id_comunidad: 'comunidad-uuid-123',
+      });
+    });
+  });
+
+  describe('obtenerSuscripcionActiva()', () => {
+    it('debe obtener la suscripción activa correctamente', async () => {
+      const suscripcionFicticia = Suscripcion.crearSuscripcion({
+        id_usuario: 'user-uuid-456',
+        id_plan_comunidad: 'plan-uuid',
+        id_estado_pendiente: 'pendiente-uuid',
+        mp_subscription_id: 'mp-sub-id',
+        init_point: 'init-point',
+        back_url: null,
+      });
+      repoMock.buscarSuscripcionActiva.mockResolvedValue(suscripcionFicticia);
+
+      const res = await service.obtenerSuscripcionActiva('comunidad-uuid', 'user-uuid-456');
+
+      expect(res).toBe(suscripcionFicticia);
+      expect(repoMock.buscarSuscripcionActiva).toHaveBeenCalledWith('comunidad-uuid', 'user-uuid-456');
+    });
+
+    it('debe retornar null si no hay suscripción activa', async () => {
+      repoMock.buscarSuscripcionActiva.mockResolvedValue(null);
+
+      const res = await service.obtenerSuscripcionActiva('comunidad-uuid', 'user-uuid-456');
+
+      expect(res).toBeNull();
+    });
+
+    it('debe lanzar InternalServerErrorException si el repositorio falla', async () => {
+      repoMock.buscarSuscripcionActiva.mockRejectedValue(new Error('DB Timeout'));
+
+      await expect(
+        service.obtenerSuscripcionActiva('comunidad-uuid', 'user-uuid-456'),
+      ).rejects.toThrow(InternalServerErrorException);
+    });
   });
 });

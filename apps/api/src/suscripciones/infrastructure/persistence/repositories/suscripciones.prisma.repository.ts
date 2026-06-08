@@ -99,4 +99,26 @@ export class PrismaSuscripcionesRepository implements ISuscripcionesRepository {
     if (!estado) return null;
     return estado.id_estado_suscripcion;
   }
+
+  /**
+   * Busca la suscripción activa de un usuario en una comunidad específica.
+   */
+  public async buscarSuscripcionActiva(
+    idComunidad: string,
+    idUsuario: string,
+  ): Promise<Suscripcion | null> {
+    const res = await this.txHost.tx.suscripcion.findFirst({
+      where: {
+        id_usuario: idUsuario,
+        plan_comunidad: {
+          id_comunidad: idComunidad,
+        },
+        estado_suscripcion: {
+          estado: 'active',
+        },
+      },
+    });
+    if (!res) return null;
+    return SuscripcionesMapper.toDomain(res);
+  }
 }

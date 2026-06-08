@@ -41,4 +41,12 @@ export abstract class ISuscripcionesRepository {
   public abstract buscarEstadoIdPorNombre(
     estadoNombre: string,
   ): Promise<string | null>;
+
+  /**
+   * Busca la suscripción activa de un usuario en una comunidad específica.
+   */
+  public abstract buscarSuscripcionActiva(
+    idComunidad: string,
+    idUsuario: string,
+  ): Promise<Suscripcion | null>;
 }

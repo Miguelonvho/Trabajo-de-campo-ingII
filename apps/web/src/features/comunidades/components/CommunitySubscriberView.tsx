@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { IComunidad, IPlanComunidad } from '@repo/types';
+import { CancelSubscriptionButton } from './CancelSubscriptionButton';
 
 interface Props {
   comunidad: IComunidad;
@@ -98,26 +99,33 @@ export function CommunitySubscriberView({ comunidad, planesComunidad, slug, erro
         <div className="absolute inset-0 opacity-10 bg-[linear-gradient(to_right,#808080_1px,transparent_1px),linear-gradient(to_bottom,#808080_1px,transparent_1px)] bg-[size:24px_24px]" />
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex flex-col justify-end pb-8 relative z-10">
-          <div className="flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
-            {/* Logo de la Comunidad */}
-            <div 
-              className="w-24 h-24 sm:w-28 sm:h-28 rounded-[28px] flex items-center justify-center text-white text-3xl sm:text-4xl font-black shadow-2xl ring-4 ring-white/10 shrink-0"
-              style={{ background: 'linear-gradient(135deg, #4f46e5, #06b6d4)' }}
-            >
-              {comunidad.nombre[0]}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+            <div className="flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
+              {/* Logo de la Comunidad */}
+              <div 
+                className="w-24 h-24 sm:w-28 sm:h-28 rounded-[28px] flex items-center justify-center text-white text-3xl sm:text-4xl font-black shadow-2xl ring-4 ring-white/10 shrink-0"
+                style={{ background: 'linear-gradient(135deg, #4f46e5, #06b6d4)' }}
+              >
+                {comunidad.nombre[0]}
+              </div>
+              
+              {/* Info principal */}
+              <div className="space-y-2">
+                <span className="text-[10px] font-black text-sky-400 uppercase tracking-widest px-3 py-1 rounded-full bg-sky-500/10 border border-sky-400/20 backdrop-blur-md">
+                  Área de Miembros
+                </span>
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight">
+                  {comunidad.nombre}
+                </h1>
+                <p className="text-slate-300 text-sm sm:text-base font-medium max-w-2xl">
+                  {comunidad.descripcion || 'Bienvenido a tu espacio exclusivo.'}
+                </p>
+              </div>
             </div>
-            
-            {/* Info principal */}
-            <div className="space-y-2">
-              <span className="text-[10px] font-black text-sky-400 uppercase tracking-widest px-3 py-1 rounded-full bg-sky-500/10 border border-sky-400/20 backdrop-blur-md">
-                Área de Miembros
-              </span>
-              <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight">
-                {comunidad.nombre}
-              </h1>
-              <p className="text-slate-300 text-sm sm:text-base font-medium max-w-2xl">
-                {comunidad.descripcion || 'Bienvenido a tu espacio exclusivo.'}
-              </p>
+
+            {/* Acciones de Suscriptor */}
+            <div className="flex items-center gap-3 shrink-0">
+              <CancelSubscriptionButton idComunidad={comunidad.id_comunidad} slug={slug} />
             </div>
           </div>
         </div>

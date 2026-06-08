@@ -9,9 +9,10 @@ import { ISuscripcionesService } from './application/services/suscripciones.serv
 import { SuscripcionesService } from './application/services/suscripciones.service';
 import { ISuscripcionesRepository } from './domain/ports/suscripciones.repository.interface';
 import { PrismaSuscripcionesRepository } from './infrastructure/persistence/repositories/suscripciones.prisma.repository';
+import { MiembroModule } from '../miembro/miembro.module';
 
 @Module({
-  imports: [PrismaModule, PlanesModule, MercadoPagoModule],
+  imports: [PrismaModule, PlanesModule, MercadoPagoModule, MiembroModule],
   controllers: [SuscripcionesController],
   providers: [
     {

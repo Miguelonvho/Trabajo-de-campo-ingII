@@ -26,4 +26,18 @@ export const suscripcionService = {
       },
     });
   },
+
+  /**
+   * Obtiene la suscripción activa del usuario para una comunidad específica
+   */
+  async getSuscripcionActivaEnComunidad(idComunidad: string): Promise<ISuscripcion | null> {
+    return api.get<ISuscripcion | null>(`/suscripciones/comunidad/${idComunidad}/activa`);
+  },
+
+  /**
+   * Cancela de forma lógica la suscripción
+   */
+  async cancelarSuscripcion(idSuscripcion: string): Promise<void> {
+    return api.post<void>(`/suscripciones/${idSuscripcion}/cancelar`, {});
+  },
 };
