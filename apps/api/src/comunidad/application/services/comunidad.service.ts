@@ -111,14 +111,14 @@ export class ComunidadService implements IComunidadService {
   /**
    * Busca y retorna la información de una comunidad específica utilizando su ID.
    *
-   * @param id - Identificador único de la comunidad.
+   * @param id_comunidad - Identificador único de la comunidad.
    * @returns Una promesa que resuelve con los datos de la comunidad encontrada.
    * @throws {NotFoundException} Si no se encuentra ninguna comunidad con el ID proporcionado.
    */
-  public async getComunidad(id: string): Promise<Comunidad> {
-    const comunidad = await this.comunidadRepository.buscarComunidadPorId(id);
+  public async getComunidad(id_comunidad: string): Promise<Comunidad> {
+    const comunidad = await this.comunidadRepository.buscarComunidadPorId(id_comunidad);
     if (!comunidad) {
-      throw new ComunidadNotFoundException(id, 'ID');
+      throw new ComunidadNotFoundException(id_comunidad, 'ID');
     }
     return comunidad;
   }
@@ -145,7 +145,7 @@ export class ComunidadService implements IComunidadService {
    * Verifica previamente que la comunidad exista y que el usuario solicitante sea el creador.
    * Si el nombre cambia, se genera un nuevo slug único.
    *
-   * @param id - Identificador único de la comunidad a actualizar.
+   * @param id_comunidad - Identificador único de la comunidad a actualizar.
    * @param command - Objeto con los campos parciales a actualizar (nombre, descripción, etc.).
    * @returns Una promesa que resuelve con los datos de la comunidad actualizada.
    * @throws {NotFoundException} Si la comunidad o la nueva categoría especificada no existen.
@@ -155,10 +155,10 @@ export class ComunidadService implements IComunidadService {
   // parcialmente.
   @Transactional()
   public async actualizarComunidad(
-    id: string,
+    id_comunidad: string,
     command: ActualizarComunidadCommand,
   ): Promise<Comunidad> {
-    const comunidad = await this.getComunidad(id);
+    const comunidad = await this.getComunidad(id_comunidad);
 
     // 1. Optimización: Solo validar categoría si realmente está cambiando
     if (
@@ -186,15 +186,15 @@ export class ComunidadService implements IComunidadService {
    * Desactiva una comunidad realizando una baja lógica (activa: false).
    * Requiere que el usuario sea el creador de la comunidad.
    *
-   * @param id - Identificador único de la comunidad a desactivar.
+   * @param id_comunidad - Identificador único de la comunidad a desactivar.
    * @returns Una promesa que resuelve cuando la comunidad ha sido desactivada.
    * @throws {NotFoundException} Si la comunidad no existe.
    */
   // @Transactional() protege la baja logica: se busca la comunidad, se cambia
   // su estado en la entidad y se guarda como una sola operacion consistente.
   @Transactional()
-  public async desactivarComunidad(id: string): Promise<void> {
-    const comunidad = await this.getComunidad(id);
+  public async desactivarComunidad(id_comunidad: string): Promise<void> {
+    const comunidad = await this.getComunidad(id_comunidad);
     comunidad.desactivarComunidad();
     await this.comunidadRepository.actualizarComunidad(comunidad);
   }
@@ -202,15 +202,15 @@ export class ComunidadService implements IComunidadService {
   /**
    * Reactiva una comunidad que fue previamente desactivada (activa: true).
    *
-   * @param id - Identificador único de la comunidad a reactivar.
+   * @param id_comunidad - Identificador único de la comunidad a reactivar.
    * @returns Una promesa que resuelve cuando la comunidad ha sido reactivada.
    * @throws {NotFoundException} Si la comunidad no existe.
    */
   // @Transactional() protege la reactivacion: si ocurre un error al guardar,
   // la base de datos conserva el estado anterior de la comunidad.
   @Transactional()
-  public async reactivarComunidad(id: string): Promise<void> {
-    const comunidad = await this.getComunidad(id);
+  public async reactivarComunidad(id_comunidad: string): Promise<void> {
+    const comunidad = await this.getComunidad(id_comunidad);
     comunidad.reactivarComunidad();
     await this.comunidadRepository.actualizarComunidad(comunidad);
   }
