@@ -127,7 +127,7 @@ export function CreateCommunityForm({ categorias }: CreateCommunityFormProps) {
 
             <div className="space-y-2">
               <label htmlFor="portada_url" className="text-sm font-bold text-slate-700 ml-1">
-                URL de imagen de portada (opcional)
+                Imagen de portada (opcional)
               </label>
               <div className="relative group">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-sky-500 transition-colors">
