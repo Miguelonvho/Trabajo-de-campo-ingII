@@ -58,7 +58,7 @@ export async function crearComunidad(formData: FormData) {
     }
 
     // Revalidamos las rutas de comunidades
-    revalidatePath('/comunidades');
+    revalidatePath('/comunidades', 'layout');
     revalidatePath('/explorar');
 
     // Redirigimos al panel de la nueva comunidad
@@ -119,8 +119,7 @@ export async function updateComunidadAction(id_comunidad: string, formData: Form
     }
 
     // Revalidar
-    revalidatePath('/comunidades');
-    revalidatePath(`/comunidades/${id_comunidad}`);
+    revalidatePath('/comunidades', 'layout');
     revalidatePath('/explorar');
 
     return { success: true, slug: updatedSlug };
@@ -135,8 +134,7 @@ export async function deactivateComunidadAction(id_comunidad: string) {
   try {
     await comunidadService.desactivarComunidad(id_comunidad);
     
-    revalidatePath('/comunidades');
-    revalidatePath(`/comunidades/${id_comunidad}`);
+    revalidatePath('/comunidades', 'layout');
     revalidatePath('/explorar');
 
     return { success: true };
@@ -150,8 +148,7 @@ export async function activateComunidadAction(id_comunidad: string) {
   try {
     await comunidadService.reactivarComunidad(id_comunidad);
     
-    revalidatePath('/comunidades');
-    revalidatePath(`/comunidades/${id_comunidad}`);
+    revalidatePath('/comunidades', 'layout');
     revalidatePath('/explorar');
 
     return { success: true };

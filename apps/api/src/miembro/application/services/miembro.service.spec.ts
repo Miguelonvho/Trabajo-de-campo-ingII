@@ -44,6 +44,7 @@ import {
     MiembroNoEncontradoException,
     MiembroYaExistenteException,
     ComunidadNoEncontradaException,
+    UsuarioNoEncontradoException,
 } from '../../domain/exceptions';
 import type { AgregarMiembroCommand } from '../commands/miembro.commands';
 
@@ -144,13 +145,13 @@ describe('MiembroService - agregarMiembro()', () => {
 
     // ── CP2: usuario no existe ────────────────────────────────────────────────
     // Prueba de Regla de Negocio: Si el usuario no existe, debemos abortar.
-    it('CP2 - debe lanzar MiembroNoEncontradoException : "El usuario (ID: user-uuid-123) no es miembro de la comunidad (ID: comunidad-uuid-456)" cuando el usuario no existe en el sistema', async () => {
+    it('CP2 - debe lanzar UsuarioNoEncontradoException : "El usuario (ID: user-uuid-123) no fue encontrado" cuando el usuario no existe en el sistema', async () => {
         // ARRANGE: Simulamos que buscarPorId no encuentra a nadie
         usuariosServiceMock.buscarPorId.mockResolvedValue(null);
 
         // ACT & ASSERT: Esperamos que lanzar el método devuelva una excepción específica
         await expect(service.agregarMiembro(comandoValido)).rejects.toThrow(
-            MiembroNoEncontradoException,
+            UsuarioNoEncontradoException,
         );
 
         // Verificamos que el proceso se detuvo y no ejecutó pasos posteriores

@@ -14,6 +14,7 @@ import {
   MiembroYaExistenteException,
   RolNoEncontradoException,
   ComunidadNoEncontradaException,
+  UsuarioNoEncontradoException,
 } from '../../domain/exceptions';
 
 /**
@@ -37,7 +38,7 @@ export class MiembroService implements IMiembroService {
 
     const usuario = await this.usuariosService.buscarPorId(id_usuario);
     if (!usuario) {
-      throw new MiembroNoEncontradoException(id_usuario, id_comunidad);
+      throw new UsuarioNoEncontradoException(id_usuario);
     }
 
     if (!(await this.repository.existeComunidad(id_comunidad))) {
