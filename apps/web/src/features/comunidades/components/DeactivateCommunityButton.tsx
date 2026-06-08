@@ -54,7 +54,7 @@ export function DeactivateCommunityButton({ idComunidad, isActive }: DeactivateC
           </div>
           <div className="space-y-1">
             <h3 className="text-lg font-bold text-slate-900">
-              {isActive ? '¿Confirmar baja de la comunidad?' : '¿Confirmar alta de la comunidad?'}
+              {isActive ? '¿Confirmar desactivación de la comunidad?' : '¿Confirmar activación de la comunidad?'}
             </h3>
             <p className="text-sm text-slate-500 leading-relaxed">
               {isActive 
@@ -84,7 +84,7 @@ export function DeactivateCommunityButton({ idComunidad, isActive }: DeactivateC
             }`}
           >
             {isPending && <Loader2 size={16} className="animate-spin" />}
-            {isActive ? 'Confirmar Baja' : 'Confirmar Alta'}
+            {isActive ? 'Confirmar Desactivación' : 'Confirmar Activación'}
           </button>
         </div>
       </div>
@@ -108,7 +108,7 @@ export function DeactivateCommunityButton({ idComunidad, isActive }: DeactivateC
         ) : (
           <CheckCircle size={18} />
         )}
-        {isActive ? 'Dar de baja' : 'Dar de alta'}
+        {isActive ? 'Desactivar' : 'Activar'}
       </button>
 
       {showModal && mounted && createPortal(modalContent, document.body)}
