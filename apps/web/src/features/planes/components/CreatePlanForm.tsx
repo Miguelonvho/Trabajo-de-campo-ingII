@@ -16,7 +16,7 @@ export function CreatePlanForm({ idComunidad, slug, ciclos }: CreatePlanFormProp
   const router = useRouter();
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [formErrors, setFormErrors] = useState<{titulo?: string; precio?: string}>({});
+  const [formErrors, setFormErrors] = useState<{titulo?: string; precio?: string; descripcion?: string}>({});
   const [selectedCiclo, setSelectedCiclo] = useState<string>(
     ciclos.length > 0 ? ciclos[0].id_ciclo_pago : ''
   );
@@ -45,14 +45,28 @@ export function CreatePlanForm({ idComunidad, slug, ciclos }: CreatePlanFormProp
     
     // Validaciones del lado del cliente
     const titulo = formData.get('titulo') as string;
-    const precio = Number(formData.get('precio'));
-    const newErrors: {titulo?: string; precio?: string} = {};
+    const descripcion = formData.get('descripcion') as string;
+    const precioRaw = formData.get('precio') as string;
+    const precio = Number(precioRaw);
+    const newErrors: {titulo?: string; precio?: string; descripcion?: string} = {};
 
     if (!titulo || !titulo.trim()) {
       newErrors.titulo = 'El título es un campo obligatorio';
+    } else if (titulo.trim().length < 3) {
+      newErrors.titulo = 'El título debe tener al menos 3 caracteres';
+    } else if (titulo.length > 100) {
+      newErrors.titulo = 'El título no puede superar los 100 caracteres';
+    }
+
+    if (!descripcion || !descripcion.trim()) {
+      newErrors.descripcion = 'La descripción es un campo obligatorio';
+    } else if (descripcion.trim().length < 10) {
+      newErrors.descripcion = 'La descripción debe tener al menos 10 caracteres';
+    } else if (descripcion.length > 500) {
+      newErrors.descripcion = 'La descripción no puede superar los 500 caracteres';
     }
     
-    if (!precio || precio <= 0) {
+    if (!precioRaw || isNaN(precio) || precio <= 0) {
       newErrors.precio = 'El precio debe ser mayor a cero';
     }
 
@@ -110,15 +124,18 @@ export function CreatePlanForm({ idComunidad, slug, ciclos }: CreatePlanFormProp
 
             <div className="space-y-2">
               <label htmlFor="descripcion" className="text-sm font-bold text-slate-700 ml-1">
-                Descripción (opcional)
+                Descripción
               </label>
               <textarea
                 id="descripcion"
                 name="descripcion"
                 rows={3}
                 placeholder="¿Qué incluye este plan?"
-                className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 outline-none transition-all focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 placeholder:text-slate-400 font-medium resize-none"
+                className={`w-full px-5 py-4 bg-slate-50 border ${formErrors.descripcion ? 'border-red-400' : 'border-slate-200'} rounded-2xl text-slate-900 outline-none transition-all focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 placeholder:text-slate-400 font-medium resize-none`}
               />
+              {formErrors.descripcion && (
+                <p className="text-red-500 text-xs font-bold mt-1 ml-1">{formErrors.descripcion}</p>
+              )}
             </div>
           </div>
         </div>
