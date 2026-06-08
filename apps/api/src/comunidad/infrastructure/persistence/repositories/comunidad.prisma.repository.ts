@@ -101,13 +101,27 @@ export class PrismaComunidadRepository implements IComunidadRepository {
    * @returns Lista de comunidades activas.
    */
   public async buscarComunidadesActivas(): Promise<Comunidad[]> {
-    const comunidades = await this.txHost.tx.comunidad.findMany({
-      where: { activa: true },
-      include: { categoria_comunidad: true },
-      orderBy: { fecha_creacion: 'desc' },
-    });
+    const comunidadesRaw = await this.txHost.tx.$queryRaw<any[]>`
+      SELECT * FROM obtener_comunidades_activas();
+    `;
 
-    return comunidades.map((c) => ComunidadMapper.toIComunidad(c));
+    return comunidadesRaw.map((c) =>
+      ComunidadMapper.toIComunidad({
+        id_comunidad: c.id_comunidad,
+        nombre: c.nombre,
+        slug: c.slug,
+        portada_url: c.portada_url,
+        activa: c.activa,
+        fecha_creacion: new Date(c.fecha_creacion),
+        descripcion: c.descripcion,
+        id_categoria_comunidad: c.id_categoria_comunidad,
+        categoria_comunidad: {
+          id_categoria_comunidad: c.id_categoria_comunidad,
+          descripcion: c.categoria_descripcion,
+          activa: c.categoria_activa,
+        },
+      }),
+    );
   }
 
   /**
