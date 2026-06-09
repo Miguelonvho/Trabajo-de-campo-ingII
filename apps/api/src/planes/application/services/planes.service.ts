@@ -130,9 +130,9 @@ export class PlanesService implements IPlanesService {
    * @returns La entidad PlanComunidad encontrada.
    * @throws {PlanNotFoundException} Si el plan no existe.
    */
-  public async getPlan(id_plan: string, onlyActive = false): Promise<PlanComunidad> {
+  public async getPlan(id_plan: string): Promise<PlanComunidad> {
     const plan = await this.planesRepository.buscarPlanPorId(id_plan);
-    if (!plan || (onlyActive && !plan.activa)) {
+    if (!plan) {
       throw new PlanNotFoundException(id_plan);
     }
     return plan;

@@ -118,13 +118,13 @@ export function CheckoutForm({ planId, email, slug, planName, planPrice }: Check
 
   return (
     <div className="space-y-10">
-      
-      <MockCreditCard 
-        cardNumber={cardNumber} 
-        cardName={cardName} 
-        expiry={expiry} 
-        cvv={cvv} 
-        isFlipped={isFlipped} 
+
+      <MockCreditCard
+        cardNumber={cardNumber}
+        cardName={cardName}
+        expiry={expiry}
+        cvv={cvv}
+        isFlipped={isFlipped}
       />
 
       {/* FORMULARIO DE PAGO */}
@@ -219,7 +219,7 @@ export function CheckoutForm({ planId, email, slug, planName, planPrice }: Check
           ) : (
             <>
               <ShieldCheck size={20} />
-              <span>Pagar e Inscribirse</span>
+              <span>Pagar y Suscribirse</span>
             </>
           )}
         </button>

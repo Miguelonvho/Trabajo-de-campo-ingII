@@ -37,7 +37,6 @@ export abstract class IPlanesService {
 
   public abstract getPlan(
     id_plan: string,
-    onlyActive?: boolean,
   ): Promise<PlanComunidad>;
 
 

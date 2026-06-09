@@ -86,7 +86,7 @@ export class PlanesController {
    */
   @Get(':id')
   public async getPlan(@Param('id') id: string): Promise<PlanResponseDto> {
-    const resultado = await this.planesService.getPlan(id, true);
+    const resultado = await this.planesService.getPlan(id);
     return PlanResponseDto.fromEntity(resultado);
   }
 
