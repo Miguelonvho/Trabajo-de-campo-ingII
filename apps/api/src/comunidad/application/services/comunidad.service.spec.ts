@@ -35,6 +35,7 @@ jest.mock('@nestjs-cls/transactional', () => ({
     },
 }));
 
+import { InternalServerErrorException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ComunidadService } from './comunidad.service';
 import { IComunidadRepository } from '../../domain/ports/comunidad.repository.interface';
@@ -368,9 +369,9 @@ describe('ComunidadService', () => {
       repoMock.actualizarComunidad.mockRejectedValue(new Error('DB connection error'));
 
       // ACT & ASSERT
-      await expect(
-        service.desactivarComunidad('comunidad-uuid-555'),
-      ).rejects.toThrow('DB connection error');
+      const promise = service.desactivarComunidad('comunidad-uuid-555');
+      await expect(promise).rejects.toThrow(InternalServerErrorException);
+      await expect(promise).rejects.toThrow('Error al desactivar la comunidad, intentá de nuevo');
     });
   });
 });
