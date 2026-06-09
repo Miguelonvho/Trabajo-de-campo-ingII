@@ -77,6 +77,7 @@ class Plan {
   + crearPlan(titulo: string, descripcion: string,
     precio: number, frecuencia: number, tipo_frecuencia: string, moneda: string,
     id_comunidad: string): PlanComunidad
+  + getCicloPago(tipo_frecuencia: string, frecuencia: number): string 
   + getValidCiclosPago(): { frecuencia: int, tipo_frecuencia: string }[]
   + getPlanesPorComunidad(id_comunidad: string): PlanComunidad[]
   + getPlan(id_plan: string): PlanComunidad
@@ -85,6 +86,7 @@ class Plan {
   + actualizarPlanComunidad(id_plan: string, precio: number, titulo: string, 
     descripcion: string, frecuencia: number, tipo_frecuencia: string, 
     moneda: string, mp_preapproval_plan_id: string ): void
+  - validatePlanData(precio: number, frecuencia: number): void
 }
 
 class Categoria {
