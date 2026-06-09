@@ -40,7 +40,7 @@ class Comunidad {
   + getMisComunidades(idCreador: string): Comunidad[]
   + getComunidad(id_comunidad: string): Comunidad
   + getComunidadPorSlug(slug: string): Comunidad
-  + actualizarComunidad(id_comunidad: string, nombre: string, descripcion: string, portada_url: string, id_categoria_comunidad: string, activa:boolean): Comunidad
+  + actualizarComunidad(id_comunidad: string, nombre: string, descripcion: string, portada_url: string, id_categoria_comunidad: string): Comunidad
   + desactivarComunidad(id_comunidad: string): void
   + reactivarComunidad(id_comunidad: string): void
   + obtenerRolUsuarioEnComunidad(idUsuario: string, slug: string): string | null
@@ -87,13 +87,12 @@ class Plan {
     moneda: string, mp_preapproval_plan_id: string ): void
 }
 
-class Categoria {
+class CategoriaComunidad {
   - descripcion: string
   - activa: boolean
   --
-  + getCategorias(): Categoria[]
-  + getCategoria(id_categoria: string): Categoria
-  + crear(descripcion: string): Categoria
+  + getCategorias(): CategoriaComunidad[]
+  + crear(descripcion: string): CategoriaComunidad
   + actualizarDescripcion(id: string, descripcion: string): void
   + desactivarCategoria(id: string): void
   + reactivarCategoria(): void
@@ -157,16 +156,65 @@ class MercadoPago {
   + getPayment(id_pago: string): any
 }
 
+class Curso {
+  - titulo: string
+  - descripcion: string
+  - imagen_url: string
+  - certificado_habilitado: boolean
+  - activa: boolean
+  - fecha_creacion: DateTime
+  - dificultad: string
+  --
+  + crearCurso(titulo: string, descripcion: string, imagen_url: string, certificado_habilitado: boolean, dificultad: string, id_comunidad: string): Curso
+  + getCursosPorComunidad(id_comunidad: string): Curso[]
+  + getCurso(id: string): Curso
+  + actualizarCurso(id: string, titulo: string, descripcion: string, imagen_url: string, certificado_habilitado: boolean, dificultad: string): void
+  + desactivarCurso(id: string): void
+  + reactivarCurso(id: string): void
+}
 
+class Modulo {
+  - titulo: string
+  - descripcion: string
+  - orden: int
+  - activa: boolean
+  - fecha_creacion: DateTime
+  --
+  + crearModulo(titulo: string, descripcion: string, orden: int, id_curso: string): Modulo
+  + getModulosPorCurso(id_curso: string): Modulo[]
+  + actualizarModulo(id: string, titulo: string, descripcion: string, orden: int): void
+  + desactivarModulo(id: string): void
+  + reactivarModulo(id: string): void
+}
+
+class Contenido {
+  - titulo: string
+  - descripcion: string
+  - orden: int
+  - activa: boolean
+  - fecha_creacion: DateTime
+  - url_contenido: string
+  - duracion: int
+  - tipo_contenido: string
+  --
+  + crearContenido(titulo: string, descripcion: string, orden: int, url_contenido: string, duracion: int, tipo_contenido: string, id_modulo: string): Contenido
+  + getContenidosPorModulo(id_modulo: string): Contenido[]
+  + actualizarContenido(id: string, titulo: string, descripcion: string, orden: int, url_contenido: string, duracion: int, tipo_contenido: string): void
+  + desactivarContenido(id: string): void
+  + reactivarContenido(id: string): void
+}
 
 ' Relaciones de Composición (Contenedor -> Contenido)
 Comunidad "1" *--> "*" Miembro : tiene >
 Comunidad "1" *--> "*" Plan : ofrece >
+Comunidad "1" *--> "*" Curso : ofrece >
+Curso "1" *--> "*" Modulo : se divide en >
+Modulo "1" *--> "*" Contenido : tiene >
 
 ' Relaciones de Asociación Unidireccional (Origen -> Destino)
 Miembro "*" --> "1" Usuario : referencia a >
 Pago "*" --> "1" Suscripcion : pertenece a >
-Comunidad "*" --> "1" Categoria : pertenece a >
+Comunidad "*" --> "1" CategoriaComunidad : pertenece a >
 Suscripcion "*" --> "1" Usuario : pertenece a >
 Suscripcion "*" --> "1" Plan : basada en >
 
@@ -175,3 +223,74 @@ Plan ..> MercadoPago : usa >
 Suscripcion ..> MercadoPago : usa >
 Pago ..> MercadoPago : consulta >
 
+
+
+rectangle "Patrón Observer (Eventos de Pago)" #a5c2dfff {
+  class PagoEventManager {
+    - observers: Map<string, PagoObserver[]>
+    --
+    + suscribir(tipo_evento: string, observador: PagoObserver): void
+    + desuscribir(tipo_evento: string, observador: PagoObserver): void
+    + notificar(tipo_evento: string, pago: Pago): void
+    + obtenerObservadores(tipo_evento: string): PagoObserver[]
+  }
+
+  interface PagoObserver {
+    + actualizar(pago: Pago): void
+  }
+
+  class AccesoComunidadObserver {
+    - rol_asignado_por_defecto: string
+    - habilitar_notificacion_bienvenida: boolean
+    --
+    + actualizar(pago: Pago): void
+  }
+
+  class ActualizarEstadoSuscripcionObserver {
+    - estado_destino_exito: string
+    - reintentar_en_caso_fallo: boolean
+    --
+    + actualizar(pago: Pago): void
+  }
+
+  class DesactivarSuscripcionObserver {
+    - estado_destino_cancelacion: string
+    - cancelar_inmediatamente: boolean
+    --
+    + actualizar(pago: Pago): void
+  }
+
+  class NotificacionEmailObserver {
+    - plantilla_id: string
+    - email_soporte_remitente: string
+    --
+    + actualizar(pago: Pago): void
+  }
+
+  class NotificacionEmailCancelacionObserver {
+    - plantilla_cancelacion_id: string
+    - email_soporte_remitente: string
+    --
+    + actualizar(pago: Pago): void
+  }
+
+  class RemoverMiembroComunidadObserver {
+    - conservar_historial_miembro: boolean
+    - notificar_creador_comunidad: boolean
+    --
+    + actualizar(pago: Pago): void
+  }
+  
+  ' Relaciones internas del Patrón
+  PagoEventManager "1" o--> "*" PagoObserver : notifica a >
+  PagoObserver <|.. AccesoComunidadObserver
+  PagoObserver <|.. ActualizarEstadoSuscripcionObserver
+  PagoObserver <|.. DesactivarSuscripcionObserver
+  PagoObserver <|.. NotificacionEmailObserver
+  PagoObserver <|.. NotificacionEmailCancelacionObserver
+  PagoObserver <|.. RemoverMiembroComunidadObserver
+}
+
+' Relación del Sujeto (Pago) con el Event Manager
+Pago "1" *--> "1" PagoEventManager :  notifica a través de >
+@enduml
