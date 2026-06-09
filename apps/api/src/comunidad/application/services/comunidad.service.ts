@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { ComunidadNotFoundException, SinComunidadesActivasException } from '../../domain/exceptions';
+import { DomainException } from '../../../common/exceptions/domain.exception';
 import { IMiembroService } from '../../../miembro/application/services/miembro.service.interface';
 import { Comunidad } from '../../domain/entities/comunidad.entity';
 import { ROLES } from '../../../common/constants/roles';
@@ -194,9 +195,16 @@ export class ComunidadService implements IComunidadService {
   // su estado en la entidad y se guarda como una sola operacion consistente.
   @Transactional()
   public async desactivarComunidad(id_comunidad: string): Promise<void> {
-    const comunidad = await this.getComunidad(id_comunidad);
-    comunidad.desactivarComunidad();
-    await this.comunidadRepository.actualizarComunidad(comunidad);
+    try {
+      const comunidad = await this.getComunidad(id_comunidad);
+      comunidad.desactivarComunidad();
+      await this.comunidadRepository.actualizarComunidad(comunidad);
+    } catch (error) {
+      if (error instanceof HttpException || error instanceof DomainException) throw error;
+      throw new InternalServerErrorException(
+        'Error al desactivar la comunidad, intentá de nuevo',
+      );
+    }
   }
 
   /**

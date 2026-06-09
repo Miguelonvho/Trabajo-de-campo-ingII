@@ -140,7 +140,8 @@ export async function deactivateComunidadAction(id_comunidad: string) {
     return { success: true };
   } catch (error) {
     console.error('Error al desactivar comunidad:', error);
-    return { success: false, error: 'Error al desactivar la comunidad' };
+    const mensajeError = error instanceof Error ? error.message : 'Error al desactivar la comunidad, intentá de nuevo';
+    return { success: false, error: mensajeError };
   }
 }
 
