@@ -35,7 +35,7 @@ import { IPagosRepository } from '../../domain/ports/pagos.repository.interface'
 import { ISuscripcionesRepository } from '../../../suscripciones/domain/ports/suscripciones.repository.interface';
 import { IMercadoPagoService } from '../../../mercadopago/services/mercadopago.service.interface';
 import { Pago } from '../../domain/entities/pago.entity';
-import { PagoListener } from '../../domain/pago-listener.interface';
+import { PagoObserver } from '../../domain/pago-observer.interface';
 
 // ============================================================================
 // 2. DATOS DE PRUEBA (FIXTURES)
@@ -205,17 +205,17 @@ describe('PagosService - procesarPago()', () => {
     });
     pagosRepoMock.crearPago.mockImplementation(async (p: Pago) => p);
 
-    // Creamos un Listener (Escucha) de prueba para validar los eventos
-    const mockListener: PagoListener = { update: jest.fn() };
-    Pago.events.subscribe('pagoAprobado', mockListener);
+    // Creamos un Observer (Observador) de prueba para validar los eventos
+    const mockObserver: PagoObserver = { actualizar: jest.fn() };
+    Pago.events.suscribir('pagoAprobado', mockObserver);
 
     await service.procesarPago('mp-payment-123');
 
     expect(pagosRepoMock.crearPago).toHaveBeenCalledTimes(1);
-    expect(mockListener.update).toHaveBeenCalledTimes(1); // El Listener debió haber sido notificado
+    expect(mockObserver.actualizar).toHaveBeenCalledTimes(1); // El Observer debió haber sido notificado
 
     // Limpieza post-prueba
-    Pago.events.unsubscribe('pagoAprobado', mockListener);
+    Pago.events.desuscribir('pagoAprobado', mockObserver);
   });
 
   // ── CP7: pago rechazado → persiste y notifica observer ───────────────────
@@ -233,15 +233,15 @@ describe('PagosService - procesarPago()', () => {
     });
     pagosRepoMock.crearPago.mockImplementation(async (p: Pago) => p);
 
-    const mockListener: PagoListener = { update: jest.fn() };
-    Pago.events.subscribe('pagoRechazado', mockListener);
+    const mockObserver: PagoObserver = { actualizar: jest.fn() };
+    Pago.events.suscribir('pagoRechazado', mockObserver);
 
     await service.procesarPago('mp-payment-123');
 
     expect(pagosRepoMock.crearPago).toHaveBeenCalledTimes(1);
-    expect(mockListener.update).toHaveBeenCalledTimes(1);
+    expect(mockObserver.actualizar).toHaveBeenCalledTimes(1);
 
-    Pago.events.unsubscribe('pagoRechazado', mockListener);
+    Pago.events.desuscribir('pagoRechazado', mockObserver);
   });
 
   // ── CP8: status desconocido → persiste en pendiente sin notificar ─────────
@@ -259,19 +259,19 @@ describe('PagosService - procesarPago()', () => {
     });
     pagosRepoMock.crearPago.mockImplementation(async (p: Pago) => p);
 
-    const mockListenerAprobado: PagoListener = { update: jest.fn() };
-    const mockListenerRechazado: PagoListener = { update: jest.fn() };
-    Pago.events.subscribe('pagoAprobado', mockListenerAprobado);
-    Pago.events.subscribe('pagoRechazado', mockListenerRechazado);
+    const mockObserverAprobado: PagoObserver = { actualizar: jest.fn() };
+    const mockObserverRechazado: PagoObserver = { actualizar: jest.fn() };
+    Pago.events.suscribir('pagoAprobado', mockObserverAprobado);
+    Pago.events.suscribir('pagoRechazado', mockObserverRechazado);
 
     await service.procesarPago('mp-payment-123');
 
     // Debe guardar, pero los eventos de Aprobación/Rechazo NO deben dispararse
     expect(pagosRepoMock.crearPago).toHaveBeenCalledTimes(1);
-    expect(mockListenerAprobado.update).not.toHaveBeenCalled();
-    expect(mockListenerRechazado.update).not.toHaveBeenCalled();
+    expect(mockObserverAprobado.actualizar).not.toHaveBeenCalled();
+    expect(mockObserverRechazado.actualizar).not.toHaveBeenCalled();
 
-    Pago.events.unsubscribe('pagoAprobado', mockListenerAprobado);
-    Pago.events.unsubscribe('pagoRechazado', mockListenerRechazado);
+    Pago.events.desuscribir('pagoAprobado', mockObserverAprobado);
+    Pago.events.desuscribir('pagoRechazado', mockObserverRechazado);
   });
 });

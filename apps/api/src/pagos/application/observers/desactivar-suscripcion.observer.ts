@@ -1,13 +1,13 @@
-import { PagoListener } from '../../domain/pago-listener.interface';
+import { PagoObserver } from '../../domain/pago-observer.interface';
 import { Pago } from '../../domain/entities/pago.entity';
 import { ISuscripcionesRepository } from '../../../suscripciones/domain/ports/suscripciones.repository.interface';
 
-export class DesactivarSuscripcionListener implements PagoListener {
+export class DesactivarSuscripcionObserver implements PagoObserver {
   public constructor(
     private readonly suscripcionesRepository: ISuscripcionesRepository,
   ) {}
 
-  public async update(pago: Pago): Promise<void> {
+  public async actualizar(pago: Pago): Promise<void> {
     const suscripcion =
       await this.suscripcionesRepository.buscarSuscripcionPorId(
         pago.id_suscripcion,

@@ -15,12 +15,12 @@ import { PagosService } from './application/services/pagos.service';
 import { IPagosRepository } from './domain/ports/pagos.repository.interface';
 import { PrismaPagosRepository } from './infrastructure/persistence/repositories/pagos.prisma.repository';
 
-import { ActualizarEstadoSuscripcionListener } from './application/listeners/actualizar-estado-suscripcion.listener';
-import { AccesoComunidadListener } from './application/listeners/acceso-comunidad.listener';
-import { NotificacionEmailListener } from './application/listeners/notificacion-email.listener';
-import { DesactivarSuscripcionListener } from './application/listeners/desactivar-suscripcion.listener';
-import { RemoverMiembroComunidadListener } from './application/listeners/remover-miembro-comunidad.listener';
-import { NotificacionEmailCancelacionListener } from './application/listeners/notificacion-email-cancelacion.listener';
+import { ActualizarEstadoSuscripcionObserver } from './application/observers/actualizar-estado-suscripcion.observer';
+import { AccesoComunidadObserver } from './application/observers/acceso-comunidad.observer';
+import { NotificacionEmailObserver } from './application/observers/notificacion-email.observer';
+import { DesactivarSuscripcionObserver } from './application/observers/desactivar-suscripcion.observer';
+import { RemoverMiembroComunidadObserver } from './application/observers/remover-miembro-comunidad.observer';
+import { NotificacionEmailCancelacionObserver } from './application/observers/notificacion-email-cancelacion.observer';
 import { Pago } from './domain/entities/pago.entity';
 
 import { ISuscripcionesRepository } from '../suscripciones/domain/ports/suscripciones.repository.interface';
@@ -53,21 +53,21 @@ import { IComunidadService } from '../comunidad/application/services/comunidad.s
       provide: IPagosRepository,
       useClass: PrismaPagosRepository,
     },
-    // Registrar los listeners como providers para poder inyectar sus dependencias
+    // Registrar los observers como providers para poder inyectar sus dependencias
     {
-      provide: ActualizarEstadoSuscripcionListener,
+      provide: ActualizarEstadoSuscripcionObserver,
       useFactory: (suscripcionesRepository: ISuscripcionesRepository) =>
-        new ActualizarEstadoSuscripcionListener(suscripcionesRepository),
+        new ActualizarEstadoSuscripcionObserver(suscripcionesRepository),
       inject: [ISuscripcionesRepository],
     },
     {
-      provide: AccesoComunidadListener,
+      provide: AccesoComunidadObserver,
       useFactory: (
         suscripcionesRepository: ISuscripcionesRepository,
         planesService: IPlanesService,
         miembroService: IMiembroService,
       ) =>
-        new AccesoComunidadListener(
+        new AccesoComunidadObserver(
           suscripcionesRepository,
           planesService,
           miembroService,
@@ -75,14 +75,14 @@ import { IComunidadService } from '../comunidad/application/services/comunidad.s
       inject: [ISuscripcionesRepository, IPlanesService, IMiembroService],
     },
     {
-      provide: NotificacionEmailListener,
+      provide: NotificacionEmailObserver,
       useFactory: (
         suscripcionesRepository: ISuscripcionesRepository,
         planesService: IPlanesService,
         usuariosService: IUsuariosService,
         comunidadService: IComunidadService,
       ) =>
-        new NotificacionEmailListener(
+        new NotificacionEmailObserver(
           suscripcionesRepository,
           planesService,
           usuariosService,
@@ -96,19 +96,19 @@ import { IComunidadService } from '../comunidad/application/services/comunidad.s
       ],
     },
     {
-      provide: DesactivarSuscripcionListener,
+      provide: DesactivarSuscripcionObserver,
       useFactory: (suscripcionesRepository: ISuscripcionesRepository) =>
-        new DesactivarSuscripcionListener(suscripcionesRepository),
+        new DesactivarSuscripcionObserver(suscripcionesRepository),
       inject: [ISuscripcionesRepository],
     },
     {
-      provide: RemoverMiembroComunidadListener,
+      provide: RemoverMiembroComunidadObserver,
       useFactory: (
         suscripcionesRepository: ISuscripcionesRepository,
         planesService: IPlanesService,
         miembroService: IMiembroService,
       ) =>
-        new RemoverMiembroComunidadListener(
+        new RemoverMiembroComunidadObserver(
           suscripcionesRepository,
           planesService,
           miembroService,
@@ -116,14 +116,14 @@ import { IComunidadService } from '../comunidad/application/services/comunidad.s
       inject: [ISuscripcionesRepository, IPlanesService, IMiembroService],
     },
     {
-      provide: NotificacionEmailCancelacionListener,
+      provide: NotificacionEmailCancelacionObserver,
       useFactory: (
         suscripcionesRepository: ISuscripcionesRepository,
         planesService: IPlanesService,
         usuariosService: IUsuariosService,
         comunidadService: IComunidadService,
       ) =>
-        new NotificacionEmailCancelacionListener(
+        new NotificacionEmailCancelacionObserver(
           suscripcionesRepository,
           planesService,
           usuariosService,
@@ -141,31 +141,31 @@ import { IComunidadService } from '../comunidad/application/services/comunidad.s
 })
 export class PagosModule implements OnModuleInit, OnModuleDestroy {
   public constructor(
-    private readonly activarSuscripcion: ActualizarEstadoSuscripcionListener,
-    private readonly accesoComunidad: AccesoComunidadListener,
-    private readonly notificacionEmail: NotificacionEmailListener,
-    private readonly desactivarSuscripcion: DesactivarSuscripcionListener,
-    private readonly removerMiembro: RemoverMiembroComunidadListener,
-    private readonly notificacionEmailCancelacion: NotificacionEmailCancelacionListener,
+    private readonly activarSuscripcion: ActualizarEstadoSuscripcionObserver,
+    private readonly accesoComunidad: AccesoComunidadObserver,
+    private readonly notificacionEmail: NotificacionEmailObserver,
+    private readonly desactivarSuscripcion: DesactivarSuscripcionObserver,
+    private readonly removerMiembro: RemoverMiembroComunidadObserver,
+    private readonly notificacionEmailCancelacion: NotificacionEmailCancelacionObserver,
   ) {}
 
   public onModuleInit(): void {
-    Pago.events.subscribe('pagoAprobado', this.activarSuscripcion);
-    Pago.events.subscribe('pagoAprobado', this.accesoComunidad);
-    Pago.events.subscribe('pagoAprobado', this.notificacionEmail);
+    Pago.events.suscribir('pagoAprobado', this.activarSuscripcion);
+    Pago.events.suscribir('pagoAprobado', this.accesoComunidad);
+    Pago.events.suscribir('pagoAprobado', this.notificacionEmail);
 
-    Pago.events.subscribe('pagoRechazado', this.desactivarSuscripcion);
-    Pago.events.subscribe('pagoRechazado', this.removerMiembro);
-    Pago.events.subscribe('pagoRechazado', this.notificacionEmailCancelacion);
+    Pago.events.suscribir('pagoRechazado', this.desactivarSuscripcion);
+    Pago.events.suscribir('pagoRechazado', this.removerMiembro);
+    Pago.events.suscribir('pagoRechazado', this.notificacionEmailCancelacion);
   }
 
   public onModuleDestroy(): void {
-    Pago.events.unsubscribe('pagoAprobado', this.activarSuscripcion);
-    Pago.events.unsubscribe('pagoAprobado', this.accesoComunidad);
-    Pago.events.unsubscribe('pagoAprobado', this.notificacionEmail);
+    Pago.events.desuscribir('pagoAprobado', this.activarSuscripcion);
+    Pago.events.desuscribir('pagoAprobado', this.accesoComunidad);
+    Pago.events.desuscribir('pagoAprobado', this.notificacionEmail);
 
-    Pago.events.unsubscribe('pagoRechazado', this.desactivarSuscripcion);
-    Pago.events.unsubscribe('pagoRechazado', this.removerMiembro);
-    Pago.events.unsubscribe('pagoRechazado', this.notificacionEmailCancelacion);
+    Pago.events.desuscribir('pagoRechazado', this.desactivarSuscripcion);
+    Pago.events.desuscribir('pagoRechazado', this.removerMiembro);
+    Pago.events.desuscribir('pagoRechazado', this.notificacionEmailCancelacion);
   }
 }

@@ -174,7 +174,7 @@ export class Pago {
     this._fecha_actualizacion = ahora;
 
     // Disparar evento a observadores pasando la instancia actual
-    await Pago.events.notify('pagoAprobado', this);
+    await Pago.events.notificar('pagoAprobado', this);
   }
 
   /**
@@ -186,6 +186,6 @@ export class Pago {
     this._id_estado = idEstado;
     this._fecha_actualizacion = new Date();
 
-    await Pago.events.notify('pagoRechazado', this);
+    await Pago.events.notificar('pagoRechazado', this);
   }
 }

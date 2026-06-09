@@ -1,5 +1,5 @@
 import { Logger } from '@nestjs/common';
-import { PagoListener } from '../../domain/pago-listener.interface';
+import { PagoObserver } from '../../domain/pago-observer.interface';
 import { Pago } from '../../domain/entities/pago.entity';
 import { ISuscripcionesRepository } from '../../../suscripciones/domain/ports/suscripciones.repository.interface';
 import { IPlanesService } from '../../../planes/application/services/planes.service.interface';
@@ -9,8 +9,8 @@ import { IComunidadService } from '../../../comunidad/application/services/comun
 /**
  * Observador encargado de enviar notificaciones de correo tras el procesamiento exitoso de un pago.
  */
-export class NotificacionEmailListener implements PagoListener {
-  private readonly logger = new Logger(NotificacionEmailListener.name);
+export class NotificacionEmailObserver implements PagoObserver {
+  private readonly logger = new Logger(NotificacionEmailObserver.name);
 
   public constructor(
     private readonly suscripcionesRepository: ISuscripcionesRepository,
@@ -22,7 +22,7 @@ export class NotificacionEmailListener implements PagoListener {
   /**
    * Al recibir la notificación, obtiene la información del usuario y comunidad para simular el correo.
    */
-  public async update(pago: Pago): Promise<void> {
+  public async actualizar(pago: Pago): Promise<void> {
     const suscripcion =
       await this.suscripcionesRepository.buscarSuscripcionPorId(
         pago.id_suscripcion,

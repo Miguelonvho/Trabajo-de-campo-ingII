@@ -1,11 +1,11 @@
-import { PagoListener } from '../../domain/pago-listener.interface';
+import { PagoObserver } from '../../domain/pago-observer.interface';
 import { Pago } from '../../domain/entities/pago.entity';
 import { ISuscripcionesRepository } from '../../../suscripciones/domain/ports/suscripciones.repository.interface';
 
 /**
  * Observador encargado de actualizar el estado de la suscripción local a ACTIVA.
  */
-export class ActualizarEstadoSuscripcionListener implements PagoListener {
+export class ActualizarEstadoSuscripcionObserver implements PagoObserver {
   public constructor(
     private readonly suscripcionesRepository: ISuscripcionesRepository,
   ) {}
@@ -13,7 +13,7 @@ export class ActualizarEstadoSuscripcionListener implements PagoListener {
   /**
    * Al ser notificado, busca la suscripción ligada al pago y la activa.
    */
-  public async update(pago: Pago): Promise<void> {
+  public async actualizar(pago: Pago): Promise<void> {
     const suscripcion =
       await this.suscripcionesRepository.buscarSuscripcionPorId(
         pago.id_suscripcion,

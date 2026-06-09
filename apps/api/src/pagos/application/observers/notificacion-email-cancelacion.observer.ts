@@ -1,14 +1,14 @@
 import { Logger } from '@nestjs/common';
-import { PagoListener } from '../../domain/pago-listener.interface';
+import { PagoObserver } from '../../domain/pago-observer.interface';
 import { Pago } from '../../domain/entities/pago.entity';
 import { ISuscripcionesRepository } from '../../../suscripciones/domain/ports/suscripciones.repository.interface';
 import { IPlanesService } from '../../../planes/application/services/planes.service.interface';
 import { IUsuariosService } from '../../../usuarios/services/usuarios.service.interface';
 import { IComunidadService } from '../../../comunidad/application/services/comunidad.service.interface';
 
-export class NotificacionEmailCancelacionListener implements PagoListener {
+export class NotificacionEmailCancelacionObserver implements PagoObserver {
   private readonly logger = new Logger(
-    NotificacionEmailCancelacionListener.name,
+    NotificacionEmailCancelacionObserver.name,
   );
 
   public constructor(
@@ -18,7 +18,7 @@ export class NotificacionEmailCancelacionListener implements PagoListener {
     private readonly comunidadService: IComunidadService,
   ) {}
 
-  public async update(pago: Pago): Promise<void> {
+  public async actualizar(pago: Pago): Promise<void> {
     const suscripcion =
       await this.suscripcionesRepository.buscarSuscripcionPorId(
         pago.id_suscripcion,
