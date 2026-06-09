@@ -126,14 +126,14 @@ export class PlanesService implements IPlanesService {
   /**
    * Busca y retorna la información de un plan específico utilizando su ID.
    *
-   * @param id - Identificador único del plan.
+   * @param id_plan - Identificador único del plan.
    * @returns La entidad PlanComunidad encontrada.
    * @throws {PlanNotFoundException} Si el plan no existe.
    */
-  public async getPlan(id: string, onlyActive = false): Promise<PlanComunidad> {
-    const plan = await this.planesRepository.buscarPlanPorId(id);
+  public async getPlan(id_plan: string, onlyActive = false): Promise<PlanComunidad> {
+    const plan = await this.planesRepository.buscarPlanPorId(id_plan);
     if (!plan || (onlyActive && !plan.activa)) {
-      throw new PlanNotFoundException(id);
+      throw new PlanNotFoundException(id_plan);
     }
     return plan;
   }
@@ -143,11 +143,11 @@ export class PlanesService implements IPlanesService {
   /**
    * Desactiva un plan realizando una baja lógica.
    *
-   * @param id - Identificador único del plan.
+   * @param id_plan - Identificador único del plan.
    */
   @Transactional()
-  public async desactivarPlanComunidad(id: string): Promise<void> {
-    const plan = await this.getPlan(id);
+  public async desactivarPlanComunidad(id_plan: string): Promise<void> {
+    const plan = await this.getPlan(id_plan);
     plan.desactivarPlanComunidad();
     await this.planesRepository.actualizarPlan(plan);
   }
@@ -155,11 +155,11 @@ export class PlanesService implements IPlanesService {
   /**
    * Reactiva un plan previamente desactivado.
    *
-   * @param id - Identificador único del plan.
+   * @param id_plan - Identificador único del plan.
    */
   @Transactional()
-  public async reactivarPlanComunidad(id: string): Promise<void> {
-    const plan = await this.getPlan(id);
+  public async reactivarPlanComunidad(id_plan: string): Promise<void> {
+    const plan = await this.getPlan(id_plan);
     plan.reactivarPlanComunidad();
     await this.planesRepository.actualizarPlan(plan);
   }

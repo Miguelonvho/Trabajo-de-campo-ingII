@@ -36,7 +36,7 @@ export abstract class IPlanesService {
   ): Promise<PlanComunidad[]>;
 
   public abstract getPlan(
-    id: string,
+    id_plan: string,
     onlyActive?: boolean,
   ): Promise<PlanComunidad>;
 
@@ -44,14 +44,14 @@ export abstract class IPlanesService {
   /**
    * Desactiva un plan de suscripción.
    *
-   * @param id - ID del plan.
+   * @param id_plan - ID del plan.
    */
-  public abstract desactivarPlanComunidad(id: string): Promise<void>;
+  public abstract desactivarPlanComunidad(id_plan: string): Promise<void>;
 
   /**
    * Reactiva un plan de suscripción.
    *
-   * @param id - ID del plan.
+   * @param id_plan - ID del plan.
    */
-  public abstract reactivarPlanComunidad(id: string): Promise<void>;
+  public abstract reactivarPlanComunidad(id_plan: string): Promise<void>;
 }
