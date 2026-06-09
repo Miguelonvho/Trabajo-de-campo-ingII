@@ -34,7 +34,7 @@ export class ComunidadService implements IComunidadService {
     private readonly comunidadRepository: IComunidadRepository,
     private readonly miembroService: IMiembroService,
     private readonly categoriaComunidadService: ICategoriaComunidadService,
-  ) {}
+  ) { }
 
   /**
    * Crea una nueva comunidad e inserta al creador como miembro con el rol de CREADOR.

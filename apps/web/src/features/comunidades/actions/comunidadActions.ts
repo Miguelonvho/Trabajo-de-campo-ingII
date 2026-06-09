@@ -40,13 +40,13 @@ export async function crearComunidad(formData: FormData) {
   try {
     // 1. Crear la comunidad base
     const comunidad = await comunidadService.crearComunidad(dto);
-    
+
     // 2. Si hay imagen de portada, subirla a Supabase y actualizar la comunidad
     if (portadaFile && portadaFile.size > 0) {
       try {
         const path = `portadas/${comunidad.id_comunidad}/portada.jpg`;
         const publicUrl = await uploadFileToStorage(portadaFile, 'comunidades', path);
-        
+
         await comunidadService.actualizarComunidad(comunidad.id_comunidad, {
           portada_url: publicUrl,
         });
@@ -133,7 +133,7 @@ export async function updateComunidadAction(id_comunidad: string, formData: Form
 export async function deactivateComunidadAction(id_comunidad: string) {
   try {
     await comunidadService.desactivarComunidad(id_comunidad);
-    
+
     revalidatePath('/comunidades', 'layout');
     revalidatePath('/explorar');
 
@@ -148,13 +148,13 @@ export async function deactivateComunidadAction(id_comunidad: string) {
 export async function activateComunidadAction(id_comunidad: string) {
   try {
     await comunidadService.reactivarComunidad(id_comunidad);
-    
+
     revalidatePath('/comunidades', 'layout');
     revalidatePath('/explorar');
 
     return { success: true };
   } catch (error) {
     console.error('Error al reactivar comunidad:', error);
-    return { success: false, error: 'Error al reactivar la comunidad' };
+    return { success: false, error: 'Error al reactivar la comunidad,intentá de nuevo' };
   }
 }
