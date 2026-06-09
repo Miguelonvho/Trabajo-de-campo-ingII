@@ -38,11 +38,11 @@ class Comunidad {
   + crearComunidad(nombre: string, descripcion: string, portada_url: string, id_categoria_comunidad: string, idCreador: string): Comunidad
   + getComunidades(): Comunidad[]
   + getMisComunidades(idCreador: string): Comunidad[]
-  + getComunidad(id: string): Comunidad
+  + getComunidad(id_comunidad: string): Comunidad
   + getComunidadPorSlug(slug: string): Comunidad
-  + actualizarComunidad(id: string, nombre: string, descripcion: string, portada_url: string, id_categoria_comunidad: string): Comunidad
-  + desactivarComunidad(id: string): void
-  + reactivarComunidad(id: string): void
+  + actualizarComunidad(id_comunidad: string, nombre: string, descripcion: string, portada_url: string, id_categoria_comunidad: string): Comunidad
+  + desactivarComunidad(id_comunidad: string): void
+  + reactivarComunidad(id_comunidad: string): void
   + obtenerRolUsuarioEnComunidad(idUsuario: string, slug: string): string | null
 }
 
@@ -63,7 +63,7 @@ class Miembro {
   + desactivar(): void
 }
 
-class PlanComunidad {
+class Plan {
   - precio: Decimal
   - titulo: string
   - descripcion: string
@@ -79,10 +79,10 @@ class PlanComunidad {
     id_comunidad: string): PlanComunidad
   + getValidCiclosPago(): { frecuencia: int, tipo_frecuencia: string }[]
   + getPlanesPorComunidad(id_comunidad: string): PlanComunidad[]
-  + getPlan(id: string): PlanComunidad
-  + desactivarPlanComunidad(id: string): void
-  + reactivarPlanComunidad(id: string): void
-  + actualizarPlanComunidad(id: string, precio: number, titulo: string, 
+  + getPlan(id_plan: string): PlanComunidad
+  + desactivarPlanComunidad(id_plan: string): void
+  + reactivarPlanComunidad(id_plan: string): void
+  + actualizarPlanComunidad(id_plan: string, precio: number, titulo: string, 
     descripcion: string, frecuencia: number, tipo_frecuencia: string, 
     moneda: string, mp_preapproval_plan_id: string ): void
 }
@@ -136,8 +136,8 @@ class Pago {
     fecha_pago: Date, mp_payload_respuesta: Json, fecha_creacion: DateTime, 
     fecha_actualizacion: DateTime, mp_payment_method_id: string, descripcion: string): Pago
   + procesarPago(id_pago: string): void
-  + aprobarPago(idEstadoAprobado: string): void
-  + rechazarPago(idEstadoRechazado: string): void
+  + aprobarPago(idEstado: string): void
+  + rechazarPago(idEstado: string): void
 
   - esPagoDuplicado(id_pago: string): boolean
   - obtenerDatosPago(id_pago: string): { id_pago: string, externalPreapprovalId: string,
@@ -153,7 +153,7 @@ class MercadoPago {
   + createPreapprovalPlan(titulo: string, descripcion: string, precio: number, frecuencia: number, tipo_frecuencia: string, moneda: string, back_url: string): string
   + cancelPreapprovalPlan(mp_preapproval_plan_id: string): void
   + createSubscription(planId: string, email: string, cardTokenId: string): string
-  + getPayment(paymentId: string): any
+  + getPayment(id_pago: string): any
 }
 
 class Curso {
@@ -206,7 +206,7 @@ class Contenido {
 
 ' Relaciones de Composición (Contenedor -> Contenido)
 Comunidad "1" *--> "*" Miembro : tiene >
-Comunidad "1" *--> "*" PlanComunidad : ofrece >
+Comunidad "1" *--> "*" Plan : ofrece >
 Comunidad "1" *--> "*" Curso : ofrece >
 Curso "1" *--> "*" Modulo : se divide en >
 Modulo "1" *--> "*" Contenido : tiene >
@@ -216,10 +216,10 @@ Miembro "*" --> "1" Usuario : referencia a >
 Pago "*" --> "1" Suscripcion : pertenece a >
 Comunidad "*" --> "1" CategoriaComunidad : pertenece a >
 Suscripcion "*" --> "1" Usuario : pertenece a >
-Suscripcion "*" --> "1" PlanComunidad : basada en >
+Suscripcion "*" --> "1" Plan : basada en >
 
 ' Relaciones de Dependencia (Usa)
-PlanComunidad ..> MercadoPago : usa >
+Plan ..> MercadoPago : usa >
 Suscripcion ..> MercadoPago : usa >
 Pago ..> MercadoPago : consulta >
 
