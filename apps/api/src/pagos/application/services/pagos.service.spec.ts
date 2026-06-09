@@ -176,11 +176,11 @@ describe('PagosService - procesarPago()', () => {
     pagosRepoMock.buscarPagoPorMpId.mockResolvedValue(null);
     mpServiceMock.getPayment.mockResolvedValue(pagoMpAprobado);
     suscripcionesRepoMock.buscarSuscripcionPorMpId.mockResolvedValue(suscripcionMock as any);
-    
+
     // Configuramos que SÍ encuentre pending, pero NO approved
     pagosRepoMock.buscarEstadoIdPorNombre.mockImplementation(async (nombre) => {
       if (nombre === 'pending') return 'uuid-pendiente';
-      return null; 
+      return null;
     });
 
     await expect(service.procesarPago('mp-payment-123')).rejects.toThrow(
@@ -197,7 +197,7 @@ describe('PagosService - procesarPago()', () => {
     pagosRepoMock.buscarPagoPorMpId.mockResolvedValue(null);
     mpServiceMock.getPayment.mockResolvedValue(pagoMpAprobado); // Estado "approved"
     suscripcionesRepoMock.buscarSuscripcionPorMpId.mockResolvedValue(suscripcionMock as any);
-    
+
     pagosRepoMock.buscarEstadoIdPorNombre.mockImplementation(async (nombre) => {
       if (nombre === 'pending') return 'uuid-pendiente';
       if (nombre === 'approved') return 'uuid-aprobado';
@@ -225,7 +225,7 @@ describe('PagosService - procesarPago()', () => {
     pagosRepoMock.buscarPagoPorMpId.mockResolvedValue(null);
     mpServiceMock.getPayment.mockResolvedValue(pagoRechazado);
     suscripcionesRepoMock.buscarSuscripcionPorMpId.mockResolvedValue(suscripcionMock as any);
-    
+
     pagosRepoMock.buscarEstadoIdPorNombre.mockImplementation(async (nombre) => {
       if (nombre === 'pending') return 'uuid-pendiente';
       if (nombre === 'rejected') return 'uuid-rechazado';
@@ -252,7 +252,7 @@ describe('PagosService - procesarPago()', () => {
     pagosRepoMock.buscarPagoPorMpId.mockResolvedValue(null);
     mpServiceMock.getPayment.mockResolvedValue(pagoEnProceso);
     suscripcionesRepoMock.buscarSuscripcionPorMpId.mockResolvedValue(suscripcionMock as any);
-    
+
     pagosRepoMock.buscarEstadoIdPorNombre.mockImplementation(async (nombre) => {
       if (nombre === 'pending') return 'uuid-pendiente';
       return null;
