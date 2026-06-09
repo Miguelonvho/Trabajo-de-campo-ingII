@@ -115,7 +115,7 @@ class Suscripcion {
   + crearSuscripcion(id_plan_comunidad: string,
     token_tarjeta: string, email: string, back_url: string,
     idUsuario: string): Suscripcion
-  + activar(idEstadoActiva: string, proximoCobro: DateTime): void
+  + activarSuscripcion(idEstadoActiva: string, proximoCobro: DateTime): void
   + cancelar(idEstadoCancelada: string): void
   + renovar(proximoCobro: DateTime): void
 }
