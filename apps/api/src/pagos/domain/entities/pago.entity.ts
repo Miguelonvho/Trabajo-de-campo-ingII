@@ -162,13 +162,13 @@ export class Pago {
   /**
    * Aprueba el pago, actualizando su estado e invocando la notificación clásica a los observadores.
    *
-   * @param idEstadoAprobado - ID UUID correspondiente al estado 'APROBADO'.
+   * @param idEstado - ID UUID correspondiente al estado 'APROBADO'.
    */
-  public async aprobarPago(idEstadoAprobado: string): Promise<void> {
-    if (this._id_estado === idEstadoAprobado) {
+  public async aprobarPago(idEstado: string): Promise<void> {
+    if (this._id_estado === idEstado) {
       throw new PagoYaAprobadoException(this._id_pago);
     }
-    this._id_estado = idEstadoAprobado;
+    this._id_estado = idEstado;
     const ahora = new Date();
     this._fecha_pago = ahora;
     this._fecha_actualizacion = ahora;
@@ -179,9 +179,11 @@ export class Pago {
 
   /**
    * Rechaza el pago.
+   *
+   * @param idEstado - ID UUID correspondiente al estado 'RECHAZADO'.
    */
-  public async rechazarPago(idEstadoRechazado: string): Promise<void> {
-    this._id_estado = idEstadoRechazado;
+  public async rechazarPago(idEstado: string): Promise<void> {
+    this._id_estado = idEstado;
     this._fecha_actualizacion = new Date();
 
     await Pago.events.notify('pagoRechazado', this);

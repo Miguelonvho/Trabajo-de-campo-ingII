@@ -119,17 +119,17 @@ export class MercadoPagoService implements IMercadoPagoService {
    * [SIMULADO] Simula la recuperación de los datos del pago para el webhook.
    * Permite al frontend simular rechazos enviando el ID con el sufijo "_reject".
    */
-  public async getPayment(paymentId: string): Promise<any> {
-    const isRejected = paymentId.endsWith('_reject');
+  public async getPayment(id_pago: string): Promise<any> {
+    const isRejected = id_pago.endsWith('_reject');
     const status = isRejected ? 'rejected' : 'approved';
-    const baseId = isRejected ? paymentId.replace('_reject', '') : paymentId;
+    const baseId = isRejected ? id_pago.replace('_reject', '') : id_pago;
 
     this.logger.log(
-      `[SIMULACIÓN MP] Consultando detalles para el pago: ${paymentId} → simulando status: ${status}`,
+      `[SIMULACIÓN MP] Consultando detalles para el pago: ${id_pago} → simulando status: ${status}`,
     );
 
     return {
-      id: paymentId,
+      id: id_pago,
       status,
       transaction_amount: 1500,
       currency_id: 'ARS',

@@ -52,8 +52,8 @@ export abstract class IMercadoPagoService {
   /**
    * Obtiene la información detallada de un pago a partir de su identificador.
    *
-   * @param paymentId - ID del pago de Mercado Pago.
+   * @param id_pago - ID del pago de Mercado Pago.
    * @returns La información cruda del pago.
    */
-  public abstract getPayment(paymentId: string): Promise<any>;
+  public abstract getPayment(id_pago: string): Promise<any>;
 }
