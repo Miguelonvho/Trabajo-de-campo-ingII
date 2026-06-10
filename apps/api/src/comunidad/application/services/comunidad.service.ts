@@ -5,7 +5,8 @@ import {
   HttpException,
 } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
-import { ComunidadNotFoundException } from '../../domain/exceptions';
+import { ComunidadNotFoundException, SinComunidadesActivasException } from '../../domain/exceptions';
+import { DomainException } from '../../../common/exceptions/domain.exception';
 import { IMiembroService } from '../../../miembro/application/services/miembro.service.interface';
 import { Comunidad } from '../../domain/entities/comunidad.entity';
 import { ROLES } from '../../../common/constants/roles';
@@ -33,7 +34,7 @@ export class ComunidadService implements IComunidadService {
     private readonly comunidadRepository: IComunidadRepository,
     private readonly miembroService: IMiembroService,
     private readonly categoriaComunidadService: ICategoriaComunidadService,
-  ) {}
+  ) { }
 
   /**
    * Crea una nueva comunidad e inserta al creador como miembro con el rol de CREADOR.
@@ -90,7 +91,11 @@ export class ComunidadService implements IComunidadService {
    * @returns Una promesa que resuelve con un arreglo de objetos IComunidad.
    */
   public async getComunidades(): Promise<Comunidad[]> {
-    return this.comunidadRepository.buscarComunidadesActivas();
+    const comunidades = await this.comunidadRepository.buscarComunidadesActivas();
+    if (comunidades.length === 0) {
+      throw new SinComunidadesActivasException();
+    }
+    return comunidades;
   }
 
   /**
@@ -107,14 +112,14 @@ export class ComunidadService implements IComunidadService {
   /**
    * Busca y retorna la información de una comunidad específica utilizando su ID.
    *
-   * @param id - Identificador único de la comunidad.
+   * @param id_comunidad - Identificador único de la comunidad.
    * @returns Una promesa que resuelve con los datos de la comunidad encontrada.
    * @throws {NotFoundException} Si no se encuentra ninguna comunidad con el ID proporcionado.
    */
-  public async getComunidad(id: string): Promise<Comunidad> {
-    const comunidad = await this.comunidadRepository.buscarComunidadPorId(id);
+  public async getComunidad(id_comunidad: string): Promise<Comunidad> {
+    const comunidad = await this.comunidadRepository.buscarComunidadPorId(id_comunidad);
     if (!comunidad) {
-      throw new ComunidadNotFoundException(id, 'ID');
+      throw new ComunidadNotFoundException(id_comunidad, 'ID');
     }
     return comunidad;
   }
@@ -141,7 +146,7 @@ export class ComunidadService implements IComunidadService {
    * Verifica previamente que la comunidad exista y que el usuario solicitante sea el creador.
    * Si el nombre cambia, se genera un nuevo slug único.
    *
-   * @param id - Identificador único de la comunidad a actualizar.
+   * @param id_comunidad - Identificador único de la comunidad a actualizar.
    * @param command - Objeto con los campos parciales a actualizar (nombre, descripción, etc.).
    * @returns Una promesa que resuelve con los datos de la comunidad actualizada.
    * @throws {NotFoundException} Si la comunidad o la nueva categoría especificada no existen.
@@ -151,10 +156,10 @@ export class ComunidadService implements IComunidadService {
   // parcialmente.
   @Transactional()
   public async actualizarComunidad(
-    id: string,
+    id_comunidad: string,
     command: ActualizarComunidadCommand,
   ): Promise<Comunidad> {
-    const comunidad = await this.getComunidad(id);
+    const comunidad = await this.getComunidad(id_comunidad);
 
     // 1. Optimización: Solo validar categoría si realmente está cambiando
     if (
@@ -182,32 +187,68 @@ export class ComunidadService implements IComunidadService {
    * Desactiva una comunidad realizando una baja lógica (activa: false).
    * Requiere que el usuario sea el creador de la comunidad.
    *
-   * @param id - Identificador único de la comunidad a desactivar.
+   * @param id_comunidad - Identificador único de la comunidad a desactivar.
    * @returns Una promesa que resuelve cuando la comunidad ha sido desactivada.
    * @throws {NotFoundException} Si la comunidad no existe.
    */
   // @Transactional() protege la baja logica: se busca la comunidad, se cambia
   // su estado en la entidad y se guarda como una sola operacion consistente.
   @Transactional()
-  public async desactivarComunidad(id: string): Promise<void> {
-    const comunidad = await this.getComunidad(id);
-    comunidad.desactivarComunidad();
-    await this.comunidadRepository.actualizarComunidad(comunidad);
+  public async desactivarComunidad(id_comunidad: string): Promise<void> {
+    try {
+      const comunidad = await this.getComunidad(id_comunidad);
+      comunidad.desactivarComunidad();
+      await this.comunidadRepository.actualizarComunidad(comunidad);
+    } catch (error) {
+      if (error instanceof HttpException || error instanceof DomainException) throw error;
+      throw new InternalServerErrorException(
+        'Error al desactivar la comunidad, intentá de nuevo',
+      );
+    }
   }
 
   /**
    * Reactiva una comunidad que fue previamente desactivada (activa: true).
    *
-   * @param id - Identificador único de la comunidad a reactivar.
+   * @param id_comunidad - Identificador único de la comunidad a reactivar.
    * @returns Una promesa que resuelve cuando la comunidad ha sido reactivada.
    * @throws {NotFoundException} Si la comunidad no existe.
    */
   // @Transactional() protege la reactivacion: si ocurre un error al guardar,
   // la base de datos conserva el estado anterior de la comunidad.
   @Transactional()
-  public async reactivarComunidad(id: string): Promise<void> {
-    const comunidad = await this.getComunidad(id);
+  public async reactivarComunidad(id_comunidad: string): Promise<void> {
+    const comunidad = await this.getComunidad(id_comunidad);
     comunidad.reactivarComunidad();
     await this.comunidadRepository.actualizarComunidad(comunidad);
+  }
+
+  /**
+   * Obtiene el rol de un usuario en una comunidad específica a partir de su slug.
+   */
+  public async obtenerRolUsuarioEnComunidad(
+    idUsuario: string,
+    slug: string,
+  ): Promise<'CREADOR' | 'SUSCRIPTOR' | null> {
+    try {
+      const comunidad = await this.getComunidadPorSlug(slug);
+      const miembro = await this.miembroService.buscarMiembro(
+        idUsuario,
+        comunidad.id_comunidad.toString(),
+      );
+      if (!miembro) {
+        return null;
+      }
+
+      if (miembro.id_rol_comunidad === ROLES.CREADOR) {
+        return 'CREADOR';
+      }
+      if (miembro.id_rol_comunidad === ROLES.SUSCRIPTOR) {
+        return 'SUSCRIPTOR';
+      }
+      return null;
+    } catch (error) {
+      return null;
+    }
   }
 }

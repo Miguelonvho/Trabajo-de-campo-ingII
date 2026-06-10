@@ -41,7 +41,11 @@ export class ApiClient {
       let errorMessage = `API request failed with status: ${response.status}`;
       try {
         const errorData = await response.json();
-        errorMessage = errorData.message || errorMessage;
+        if (errorData.message) {
+          errorMessage = Array.isArray(errorData.message)
+            ? errorData.message.join(', ')
+            : errorData.message;
+        }
       } catch {
         // Si no es JSON, mantenemos el mensaje por defecto
       }

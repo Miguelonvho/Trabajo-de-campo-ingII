@@ -35,7 +35,7 @@ import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 @ApiTags('Comunidades')
 @Controller('comunidades')
 export class ComunidadController {
-  public constructor(private readonly comunidadService: IComunidadService) { }
+  public constructor(private readonly comunidadService: IComunidadService) {}
 
   /**
    * Crea una nueva comunidad.
@@ -122,17 +122,41 @@ export class ComunidadController {
   }
 
   /**
+   * Obtiene el rol del usuario autenticado en una comunidad específica por su slug.
+   *
+   * @param slug - El identificador amigable de la comunidad.
+   * @param usuario - El usuario autenticado.
+   * @returns El rol en la comunidad o null si no es miembro.
+   */
+  @ApiOperation({
+    summary: 'Obtiene el rol del usuario autenticado en una comunidad',
+  })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Get('s/:slug/rol')
+  public async getRolEnComunidad(
+    @Param('slug') slug: string,
+    @CurrentUser() usuario: IUsuario,
+  ): Promise<{ rol: 'CREADOR' | 'SUSCRIPTOR' | null }> {
+    const rol = await this.comunidadService.obtenerRolUsuarioEnComunidad(
+      usuario.id_usuario.toString(),
+      slug,
+    );
+    return { rol };
+  }
+
+  /**
    * Obtiene el detalle de una comunidad específica buscando por su ID único.
    *
-   * @param id - Identificador único de la comunidad.
+   * @param id_comunidad - Identificador único de la comunidad.
    * @returns Los datos de la comunidad encontrada.
    * @throws {NotFoundException} Si la comunidad no existe.
    */
   @Get(':id')
   public async getComunidad(
-    @Param('id') id: string,
+    @Param('id') id_comunidad: string,
   ): Promise<ComunidadResponseDto> {
-    const resultado = await this.comunidadService.getComunidad(id);
+    const resultado = await this.comunidadService.getComunidad(id_comunidad);
     return ComunidadResponseDto.fromEntity(resultado);
   }
 
@@ -140,7 +164,7 @@ export class ComunidadController {
    * Actualiza los datos de una comunidad existente.
    * Solo el usuario que creó la comunidad (o con permisos suficientes) puede realizar esta acción.
    *
-   * @param id - Identificador único de la comunidad a modificar.
+   * @param id_comunidad - Identificador único de la comunidad a modificar.
    * @param dto - Datos parciales o totales a actualizar.
    * @returns Los datos de la comunidad actualizada.
    * @throws {ForbiddenException} Si el usuario no es el dueño de la comunidad.
@@ -150,10 +174,10 @@ export class ComunidadController {
   @UseGuards(JwtAuthGuard, ComunidadOwnerGuard)
   @Patch(':id')
   public async actualizarComunidad(
-    @Param('id') id: string,
+    @Param('id') id_comunidad: string,
     @Body() dto: ActualizarComunidadDto,
   ): Promise<ComunidadResponseDto> {
-    const resultado = await this.comunidadService.actualizarComunidad(id, {
+    const resultado = await this.comunidadService.actualizarComunidad(id_comunidad, {
       nombre: dto.nombre,
       descripcion: dto.descripcion,
       portada_url: dto.portada_url,
@@ -166,7 +190,7 @@ export class ComunidadController {
    * Realiza una desactivación lógica de la comunidad (baja lógica).
    * Solo el creador de la comunidad puede realizar esta acción.
    *
-   * @param id - Identificador único de la comunidad a desactivar.
+   * @param id_comunidad - Identificador único de la comunidad a desactivar.
    * @returns Un mensaje confirmando la desactivación.
    * @throws {ForbiddenException} Si el usuario no es el dueño de la comunidad.
    */
@@ -175,11 +199,11 @@ export class ComunidadController {
   @HttpCode(HttpStatus.OK)
   @Delete(':id')
   public async desactivarComunidad(
-    @Param('id') id: string,
+    @Param('id') id_comunidad: string,
   ): Promise<{ mensaje: string }> {
-    await this.comunidadService.desactivarComunidad(id);
+    await this.comunidadService.desactivarComunidad(id_comunidad);
     return {
-      mensaje: `La comunidad con id ${id} fue desactivada correctamente`,
+      mensaje: `La comunidad con id ${id_comunidad} fue desactivada correctamente`,
     };
   }
 
@@ -187,7 +211,7 @@ export class ComunidadController {
    * Reactiva una comunidad que fue previamente desactivada.
    * Solo el creador de la comunidad puede realizar esta acción.
    *
-   * @param id - Identificador único de la comunidad a reactivar.
+   * @param id_comunidad - Identificador único de la comunidad a reactivar.
    * @returns Un mensaje confirmando la reactivación.
    * @throws {ForbiddenException} Si el usuario no es el dueño de la comunidad.
    */
@@ -196,11 +220,11 @@ export class ComunidadController {
   @HttpCode(HttpStatus.OK)
   @Post(':id/reactivar')
   public async reactivarComunidad(
-    @Param('id') id: string,
+    @Param('id') id_comunidad: string,
   ): Promise<{ mensaje: string }> {
-    await this.comunidadService.reactivarComunidad(id);
+    await this.comunidadService.reactivarComunidad(id_comunidad);
     return {
-      mensaje: `La comunidad con id ${id} fue reactivada correctamente`,
+      mensaje: `La comunidad con id ${id_comunidad} fue reactivada correctamente`,
     };
   }
 }

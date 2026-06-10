@@ -46,19 +46,34 @@ export class PrismaComunidadRepository implements IComunidadRepository {
    * @returns La comunidad actualizada mapeada al dominio.
    */
   public async actualizarComunidad(comunidad: Comunidad): Promise<Comunidad> {
-    const persistida = await this.txHost.tx.comunidad.update({
-      where: { id_comunidad: comunidad.id_comunidad },
-      data: {
-        nombre: comunidad.nombre,
-        slug: comunidad.slug,
-        activa: comunidad.activa,
-        descripcion: comunidad.descripcion,
-        portada_url: comunidad.portada_url,
-        id_categoria_comunidad: comunidad.id_categoria_comunidad,
+    const result = await this.txHost.tx.$queryRaw<any[]>`
+      SELECT * FROM actualizar_comunidad(
+        ${comunidad.id_comunidad}::uuid,
+        ${comunidad.nombre}::text,
+        ${comunidad.slug}::text,
+        ${comunidad.activa}::boolean,
+        ${comunidad.descripcion}::text,
+        ${comunidad.portada_url}::text,
+        ${comunidad.id_categoria_comunidad}::uuid
+      );
+    `;
+
+    const c = result[0];
+    return ComunidadMapper.toIComunidad({
+      id_comunidad: c.id_comunidad,
+      nombre: c.nombre,
+      slug: c.slug,
+      portada_url: c.portada_url,
+      activa: c.activa,
+      fecha_creacion: new Date(c.fecha_creacion),
+      descripcion: c.descripcion,
+      id_categoria_comunidad: c.id_categoria_comunidad,
+      categoria_comunidad: {
+        id_categoria_comunidad: c.id_categoria_comunidad,
+        descripcion: c.categoria_descripcion,
+        activa: c.categoria_activa,
       },
-      include: { categoria_comunidad: true },
     });
-    return ComunidadMapper.toIComunidad(persistida);
   }
 
   /**
@@ -101,13 +116,27 @@ export class PrismaComunidadRepository implements IComunidadRepository {
    * @returns Lista de comunidades activas.
    */
   public async buscarComunidadesActivas(): Promise<Comunidad[]> {
-    const comunidades = await this.txHost.tx.comunidad.findMany({
-      where: { activa: true },
-      include: { categoria_comunidad: true },
-      orderBy: { fecha_creacion: 'desc' },
-    });
+    const comunidadesRaw = await this.txHost.tx.$queryRaw<any[]>`
+      SELECT * FROM obtener_comunidades_activas();
+    `;
 
-    return comunidades.map((c) => ComunidadMapper.toIComunidad(c));
+    return comunidadesRaw.map((c) =>
+      ComunidadMapper.toIComunidad({
+        id_comunidad: c.id_comunidad,
+        nombre: c.nombre,
+        slug: c.slug,
+        portada_url: c.portada_url,
+        activa: c.activa,
+        fecha_creacion: new Date(c.fecha_creacion),
+        descripcion: c.descripcion,
+        id_categoria_comunidad: c.id_categoria_comunidad,
+        categoria_comunidad: {
+          id_categoria_comunidad: c.id_categoria_comunidad,
+          descripcion: c.categoria_descripcion,
+          activa: c.categoria_activa,
+        },
+      }),
+    );
   }
 
   /**

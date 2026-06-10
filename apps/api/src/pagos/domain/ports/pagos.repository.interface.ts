@@ -27,10 +27,8 @@ export abstract class IPagosRepository {
   /**
    * Busca dinámicamente el UUID del estado del pago en la base de datos usando su nombre (ej: 'APROBADO').
    */
-  public abstract buscarEstadoIdPorNombre(estadoNombre: string): Promise<string | null>;
+  public abstract buscarEstadoIdPorNombre(
+    estadoNombre: string,
+  ): Promise<string | null>;
 
-  /**
-   * Busca dinámicamente el UUID de la moneda en la base de datos usando su código (ej: 'ARS').
-   */
-  public abstract buscarMonedaIdPorNombre(monedaNombre: string): Promise<string | null>;
 }

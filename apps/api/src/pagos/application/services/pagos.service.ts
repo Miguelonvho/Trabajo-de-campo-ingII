@@ -1,10 +1,15 @@
-import { Injectable, Logger, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { IPagosService } from './pagos.service.interface';
 import { IPagosRepository } from '../../domain/ports/pagos.repository.interface';
 import { ISuscripcionesRepository } from '../../../suscripciones/domain/ports/suscripciones.repository.interface';
 import { IMercadoPagoService } from '../../../mercadopago/services/mercadopago.service.interface';
 import { Pago } from '../../domain/entities/pago.entity';
+import { DatosPagoNotificado } from '../commands/pagos.commands';
 
 /**
  * Servicio encargado de la orquestación del procesamiento de pagos.
@@ -17,92 +22,150 @@ export class PagosService implements IPagosService {
     private readonly pagosRepository: IPagosRepository,
     private readonly suscripcionesRepository: ISuscripcionesRepository,
     private readonly mercadoPagoService: IMercadoPagoService,
-  ) {}
+  ) { }
 
   /**
    * Valida un pago proveniente de Mercado Pago y actualiza el estado de la suscripción asociada.
    */
   @Transactional()
-  public async procesarNotificacionPago(paymentId: string): Promise<void> {
-    this.logger.log(`Procesando notificación de pago: ${paymentId}`);
+  public async procesarPago(id_pago: string): Promise<void> {
 
     // 1. Evitar doble procesamiento (Idempotencia)
-    const pagoExistente = await this.pagosRepository.buscarPagoPorMpId(paymentId);
-    if (pagoExistente) {
-      this.logger.log(`El pago con id de Mercado Pago ${paymentId} ya se encuentra registrado.`);
+    if (await this.esPagoDuplicado(id_pago)) {
       return;
     }
 
-    // 2. Obtener los detalles del pago de Mercado Pago
-    let paymentData: any;
+    // 2. Obtener y aislar los detalles del pago de la pasarela de pagos
+    const datosPago = await this.obtenerDatosPago(id_pago);
+    if (!datosPago) {
+      return;
+    }
+
+    // 3. Buscar la suscripción asociada en la base de datos local
+    const suscripcion =
+      await this.suscripcionesRepository.buscarSuscripcionPorMpId(
+        datosPago.externalPreapprovalId,
+      );
+    if (!suscripcion) {
+      this.logger.warn(
+        `No se encontró una suscripción local vinculada al preapproval_id ${datosPago.externalPreapprovalId}.`,
+      );
+      return;
+    }
+
+    // 4. Inicializar la entidad de pago en estado PENDIENTE en memoria
+    const pago = await this.inicializarPagoEntidad(
+      suscripcion.suscripcion_id,
+      datosPago,
+    );
+
+
+    const status = datosPago.status;
+    if (status === 'approved' || status === 'rejected') {
+      const idEstado = await this.pagosRepository.buscarEstadoIdPorNombre(status);
+      if (!idEstado) {
+        throw new InternalServerErrorException(
+          `El estado ${status} no está configurado en BD`,
+        );
+      } else if (status === 'approved') {
+        await pago.aprobarPago(idEstado);
+      } else {
+        await pago.rechazarPago(idEstado);
+      }
+    }
+
+
+    // 6. Persistir el pago con su estado final en la base de datos (INSERT único)
+    await this.pagosRepository.crearPago(pago);
+  }
+
+  // --- Métodos de Ayuda Auxiliares para Modularizar y Cumplir SRP ---
+
+  /**
+   * Verifica si el pago ya se encuentra registrado en el sistema local.
+   */
+  private async esPagoDuplicado(id_pago: string): Promise<boolean> {
+    const pagoExistente =
+      await this.pagosRepository.buscarPagoPorMpId(id_pago);
+    if (pagoExistente) {
+      this.logger.log(
+        `El pago con id de Mercado Pago ${id_pago} ya se encuentra registrado.`,
+      );
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Obtiene la información del pago desde Mercado Pago y la normaliza al formato interno de la aplicación.
+   */
+  private async obtenerDatosPago(
+    id_pago: string,
+  ): Promise<DatosPagoNotificado | null> {
     try {
-      paymentData = await this.mercadoPagoService.getPayment(paymentId);
+      const paymentData = await this.mercadoPagoService.getPayment(id_pago);
+      const preapprovalId =
+        paymentData.preapproval_id ||
+        (paymentData.metadata && paymentData.metadata.preapproval_id);
+
+      if (!preapprovalId) {
+        this.logger.warn(
+          `El pago ${id_pago} no contiene un preapproval_id (suscripción asociada).`,
+        );
+        return null;
+      }
+
+      return {
+        id_pago,
+        externalPreapprovalId: preapprovalId,
+        amount: Number(paymentData.transaction_amount),
+        netAmount:
+          paymentData.transaction_details &&
+            paymentData.transaction_details.net_received_amount
+            ? Number(paymentData.transaction_details.net_received_amount)
+            : null,
+        currencyCode: paymentData.currency_id || 'ARS',
+        paymentMethodId: paymentData.payment_method_id,
+        description: paymentData.description || null,
+        status: paymentData.status,
+        rawPayload: paymentData,
+      };
     } catch (error) {
-      this.logger.error(`Error al recuperar datos del pago ${paymentId} de Mercado Pago`, error);
+      this.logger.error(
+        `Error al recuperar datos del pago ${id_pago} de Mercado Pago`,
+        error,
+      );
       throw error;
     }
+  }
 
-    // 3. Buscar la suscripción asociada en base al preapproval_id de Mercado Pago
-    const preapprovalId = paymentData.preapproval_id || (paymentData.metadata && paymentData.metadata.preapproval_id);
-    if (!preapprovalId) {
-      this.logger.warn(`El pago ${paymentId} no contiene un preapproval_id (suscripción asociada).`);
-      return;
-    }
+  /**
+   * Resuelve identidades del sistema e inicializa la entidad Pago en estado PENDIENTE.
+   */
+  private async inicializarPagoEntidad(
+    suscripcionId: string,
+    datos: DatosPagoNotificado,
+  ): Promise<Pago> {
+    const idEstadoPendiente =
+      await this.pagosRepository.buscarEstadoIdPorNombre('pending');
 
-    const suscripcion = await this.suscripcionesRepository.buscarSuscripcionPorMpId(preapprovalId);
-    if (!suscripcion) {
-      this.logger.warn(`No se encontró una suscripción local vinculada al preapproval_id ${preapprovalId}.`);
-      return;
-    }
-
-    // 4. Resolver dinámicamente los IDs necesarios en la BD
-    const idEstadoPendiente = await this.pagosRepository.buscarEstadoIdPorNombre('PENDIENTE');
-    const idMoneda = await this.pagosRepository.buscarMonedaIdPorNombre(paymentData.currency_id || 'ARS');
-
-    if (!idEstadoPendiente || !idMoneda) {
+    if (!idEstadoPendiente) {
       throw new InternalServerErrorException(
-        'Configuraciones iniciales de moneda o estados de pago no configuradas en BD',
+        'Configuraciones iniciales de estados de pago no configuradas en BD',
       );
     }
 
-    // 5. Crear la entidad de dominio Pago en estado PENDIENTE
-    const pago = Pago.crearPago({
-      id_suscripcion: suscripcion.suscripcion_id,
-      monto: Number(paymentData.transaction_amount),
-      id_moneda: idMoneda,
+    return Pago.crearPago({
+      id_suscripcion: suscripcionId,
+      monto: datos.amount,
       id_estado_pendiente: idEstadoPendiente,
-      mp_payment_id: paymentId,
-      monto_neto: paymentData.transaction_details && paymentData.transaction_details.net_received_amount
-        ? Number(paymentData.transaction_details.net_received_amount)
-        : null,
-      mp_payload_respuesta: paymentData,
-      mp_payment_method_id: paymentData.payment_method_id,
-      descripcion: paymentData.description || null,
+      mp_payment_id: datos.id_pago,
+      monto_neto: datos.netAmount,
+      mp_payload_respuesta: datos.rawPayload,
+      mp_payment_method_id: datos.paymentMethodId,
+      descripcion: datos.description,
     });
-
-    // Guardar el pago inicial en la base de datos
-    await this.pagosRepository.crearPago(pago);
-
-    // 6. Si el pago fue aprobado, ejecutar el cambio de estado e iniciar el patrón Observer
-    if (paymentData.status === 'approved') {
-      const idEstadoAprobado = await this.pagosRepository.buscarEstadoIdPorNombre('APROBADO');
-      if (!idEstadoAprobado) {
-        throw new InternalServerErrorException('El estado APROBADO no está configurado en BD');
-      }
-
-      // El método aprobarPago cambia el estado de la entidad y lanza la notificación al manager
-      pago.aprobarPago(idEstadoAprobado);
-
-      // Guardar la actualización de estado del pago
-      await this.pagosRepository.actualizarPago(pago);
-      this.logger.log(`Pago ${paymentId} procesado y aprobado exitosamente.`);
-    } else if (paymentData.status === 'rejected') {
-      const idEstadoRechazado = await this.pagosRepository.buscarEstadoIdPorNombre('RECHAZADO');
-      if (idEstadoRechazado) {
-        pago.rechazarPago(idEstadoRechazado);
-        await this.pagosRepository.actualizarPago(pago);
-      }
-      this.logger.log(`Pago ${paymentId} procesado con estado RECHAZADO.`);
-    }
   }
+
+
 }

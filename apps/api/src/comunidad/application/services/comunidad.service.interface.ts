@@ -38,10 +38,10 @@ export abstract class IComunidadService {
   /**
    * Busca y retorna la información de una comunidad específica utilizando su ID.
    *
-   * @param id - Identificador único de la comunidad.
+   * @param id_comunidad - Identificador único de la comunidad.
    * @returns Una promesa que resuelve con los datos de la comunidad encontrada.
    */
-  abstract getComunidad(id: string): Promise<Comunidad>;
+  abstract getComunidad(id_comunidad: string): Promise<Comunidad>;
 
   /**
    * Busca y retorna la información de una comunidad específica utilizando su slug.
@@ -54,30 +54,42 @@ export abstract class IComunidadService {
   /**
    * Actualiza los datos de una comunidad existente.
    *
-   * @param id - Identificador único de la comunidad a actualizar.
+   * @param id_comunidad - Identificador único de la comunidad a actualizar.
    * @param command - Objeto con los campos parciales a actualizar.
    * @returns Una promesa que resuelve con los datos de la comunidad actualizada.
    */
   abstract actualizarComunidad(
-    id: string,
+    id_comunidad: string,
     command: ActualizarComunidadCommand,
   ): Promise<Comunidad>;
 
   /**
    * Desactiva una comunidad realizando una baja lógica.
    *
-   * @param id - Identificador único de la comunidad a desactivar.
+   * @param id_comunidad - Identificador único de la comunidad a desactivar.
    * @returns Una promesa que resuelve cuando la comunidad ha sido desactivada.
    * @throws {NotFoundException} Si la comunidad no existe.
    */
-  abstract desactivarComunidad(id: string): Promise<void>;
+  abstract desactivarComunidad(id_comunidad: string): Promise<void>;
 
   /**
    * Reactiva una comunidad que fue previamente desactivada.
    *
-   * @param id - Identificador único de la comunidad a reactivar.
+   * @param id_comunidad - Identificador único de la comunidad a reactivar.
    * @returns Una promesa que resuelve cuando la comunidad ha sido reactivada.
    * @throws {NotFoundException} Si la comunidad no existe.
    */
-  abstract reactivarComunidad(id: string): Promise<void>;
+  abstract reactivarComunidad(id_comunidad: string): Promise<void>;
+
+  /**
+   * Obtiene el rol de un usuario en una comunidad específica a partir de su slug.
+   *
+   * @param idUsuario - Identificador único del usuario.
+   * @param slug - El identificador amigable de la comunidad.
+   * @returns El rol del usuario o null si no pertenece a la comunidad.
+   */
+  abstract obtenerRolUsuarioEnComunidad(
+    idUsuario: string,
+    slug: string,
+  ): Promise<'CREADOR' | 'SUSCRIPTOR' | null>;
 }

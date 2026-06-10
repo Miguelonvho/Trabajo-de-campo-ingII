@@ -11,17 +11,22 @@ export default async function ExplorarPage() {
   // Fetching de datos en el servidor
   let comunidades: IComunidad[] = [];
   let categorias: ICategoriaComunidad[] = [];
+  let errorMsg: string | null = null;
 
   try {
-    const results = await Promise.all([
-      comunidadService.getComunidades(),
-      comunidadService.getCategorias(),
-    ]);
-    comunidades = results[0];
-    categorias = results[1];
-  } catch {
-    console.error('Error al cargar datos de exploración');
-    // En caso de error, mostramos listas vacías para no romper la UI
+    categorias = await comunidadService.getCategorias();
+  } catch (error) {
+    console.error('Error al cargar categorias:', error);
+  }
+
+  try {
+    comunidades = await comunidadService.getComunidades();
+  } catch (error: any) {
+    if (error.message === 'Sin comunidades activas') {
+      errorMsg = error.message;
+    } else {
+      console.error('Error al cargar comunidades:', error);
+    }
   }
 
   return (
@@ -43,6 +48,7 @@ export default async function ExplorarPage() {
         <ExplorarContent
           comunidadesIniciales={comunidades}
           categorias={categorias}
+          errorMsg={errorMsg}
         />
 
       </div>

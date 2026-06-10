@@ -63,3 +63,17 @@
   background-image: radial-gradient(rgba(14, 165, 233, 0.08) 1px, transparent 1px);
   background-size: 32px 32px;
 }
+
+/* Utilities for 3D card flip */
+@utility perspective-1000 {
+  perspective: 1000px;
+}
+@utility preserve-3d {
+  transform-style: preserve-3d;
+}
+@utility backface-hidden {
+  backface-visibility: hidden;
+}
+@utility rotate-y-180 {
+  transform: rotateY(180deg);
+}

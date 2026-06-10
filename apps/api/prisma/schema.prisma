@@ -35,7 +35,6 @@ model estado_suscripcion {
 model moneda {
   id_moneda      String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   moneda         String
-  pago           pago[]
   plan_comunidad plan_comunidad[]
 }
 
@@ -115,6 +114,7 @@ model miembro_comunidad {
   id_rol_comunidad    String    @db.Uuid
   fecha_ingreso       DateTime  @default(now()) @db.Timestamptz(6)
   fecha_actualizacion DateTime? @db.Timestamptz(6)
+  activo              Boolean   @default(true)
   comunidad           comunidad @relation(fields: [id_comunidad], references: [id_comunidad], onDelete: NoAction, onUpdate: NoAction, map: "fk_miembro_comunidad")
   rol                 rol       @relation(fields: [id_rol_comunidad], references: [id_rol], onDelete: NoAction, onUpdate: NoAction, map: "fk_miembro_rol")
   usuario             usuario   @relation(fields: [id_usuario], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction, map: "fk_miembro_usuario")
@@ -149,14 +149,12 @@ model pago {
   mp_payment_id        String?     @unique
   id_estado            String      @db.Uuid
   fecha_pago           DateTime?   @db.Timestamptz(6)
-  id_moneda            String      @db.Uuid
   mp_payload_respuesta Json?
   fecha_creacion       DateTime    @default(now()) @db.Timestamptz(6)
   fecha_actualizacion  DateTime?   @db.Timestamptz(6)
   mp_payment_method_id String?
   descripcion          String?
   estado_pago          estado_pago @relation(fields: [id_estado], references: [id_estado_pago], onDelete: NoAction, onUpdate: NoAction, map: "fk_pago_estado")
-  moneda               moneda      @relation(fields: [id_moneda], references: [id_moneda], onDelete: NoAction, onUpdate: NoAction, map: "fk_pago_moneda")
   suscripcion          suscripcion @relation(fields: [id_suscripcion], references: [suscripcion_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_pago_suscripcion")
 }
 

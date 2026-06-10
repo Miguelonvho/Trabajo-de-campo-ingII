@@ -17,7 +17,9 @@ export class PrismaSuscripcionesRepository implements ISuscripcionesRepository {
   /**
    * Guarda una nueva suscripción en la base de datos.
    */
-  public async crearSuscripcion(suscripcion: Suscripcion): Promise<Suscripcion> {
+  public async crearSuscripcion(
+    suscripcion: Suscripcion,
+  ): Promise<Suscripcion> {
     const persistido = await this.txHost.tx.suscripcion.create({
       data: {
         suscripcion_id: suscripcion.suscripcion_id,
@@ -41,7 +43,9 @@ export class PrismaSuscripcionesRepository implements ISuscripcionesRepository {
   /**
    * Actualiza el registro de una suscripción existente.
    */
-  public async actualizarSuscripcion(suscripcion: Suscripcion): Promise<Suscripcion> {
+  public async actualizarSuscripcion(
+    suscripcion: Suscripcion,
+  ): Promise<Suscripcion> {
     const persistido = await this.txHost.tx.suscripcion.update({
       where: { suscripcion_id: suscripcion.suscripcion_id },
       data: {
@@ -72,7 +76,9 @@ export class PrismaSuscripcionesRepository implements ISuscripcionesRepository {
   /**
    * Recupera una suscripción utilizando el identificador único de suscripción de Mercado Pago (preapproval_id).
    */
-  public async buscarSuscripcionPorMpId(mpSubscriptionId: string): Promise<Suscripcion | null> {
+  public async buscarSuscripcionPorMpId(
+    mpSubscriptionId: string,
+  ): Promise<Suscripcion | null> {
     const res = await this.txHost.tx.suscripcion.findUnique({
       where: { mp_subscription_id: mpSubscriptionId },
     });
@@ -84,11 +90,35 @@ export class PrismaSuscripcionesRepository implements ISuscripcionesRepository {
    * Busca dinámicamente el UUID del estado de suscripción por su descripción de texto.
    * Esto elimina los IDs fijos/cableados en el código.
    */
-  public async buscarEstadoIdPorNombre(estadoNombre: string): Promise<string | null> {
+  public async buscarEstadoIdPorNombre(
+    estadoNombre: string,
+  ): Promise<string | null> {
     const estado = await this.txHost.tx.estado_suscripcion.findFirst({
       where: { estado: { equals: estadoNombre, mode: 'insensitive' } },
     });
     if (!estado) return null;
     return estado.id_estado_suscripcion;
+  }
+
+  /**
+   * Busca la suscripción activa de un usuario en una comunidad específica.
+   */
+  public async buscarSuscripcionActiva(
+    idComunidad: string,
+    idUsuario: string,
+  ): Promise<Suscripcion | null> {
+    const res = await this.txHost.tx.suscripcion.findFirst({
+      where: {
+        id_usuario: idUsuario,
+        plan_comunidad: {
+          id_comunidad: idComunidad,
+        },
+        estado_suscripcion: {
+          estado: 'active',
+        },
+      },
+    });
+    if (!res) return null;
+    return SuscripcionesMapper.toDomain(res);
   }
 }

@@ -17,7 +17,7 @@ export class Pago {
   private _mp_payment_id?: string | null;
   private _id_estado: string;
   private _fecha_pago?: Date | null;
-  private _id_moneda: string;
+
   private _mp_payload_respuesta?: any | null;
   private _fecha_creacion: Date;
   private _fecha_actualizacion?: Date | null;
@@ -29,7 +29,6 @@ export class Pago {
     id_suscripcion: string;
     monto: number;
     id_estado: string;
-    id_moneda: string;
     fecha_creacion: Date;
     monto_neto?: number | null;
     mp_payment_id?: string | null;
@@ -43,7 +42,6 @@ export class Pago {
     this.id_suscripcion = props.id_suscripcion;
     this.monto = props.monto;
     this.id_estado = props.id_estado;
-    this.id_moneda = props.id_moneda;
     this._fecha_creacion = props.fecha_creacion;
     this._monto_neto = props.monto_neto;
     this._mp_payment_id = props.mp_payment_id;
@@ -55,23 +53,48 @@ export class Pago {
   }
 
   // Getters
-  public get id_pago(): string { return this._id_pago; }
-  public get id_suscripcion(): string { return this._id_suscripcion; }
-  public get monto(): number { return this._monto; }
-  public get monto_neto(): number | null | undefined { return this._monto_neto; }
-  public get mp_payment_id(): string | null | undefined { return this._mp_payment_id; }
-  public get id_estado(): string { return this._id_estado; }
-  public get fecha_pago(): Date | null | undefined { return this._fecha_pago; }
-  public get id_moneda(): string { return this._id_moneda; }
-  public get mp_payload_respuesta(): any | null | undefined { return this._mp_payload_respuesta; }
-  public get fecha_creacion(): Date { return this._fecha_creacion; }
-  public get fecha_actualizacion(): Date | null | undefined { return this._fecha_actualizacion; }
-  public get mp_payment_method_id(): string | null | undefined { return this._mp_payment_method_id; }
-  public get descripcion(): string | null | undefined { return this._descripcion; }
+  public get id_pago(): string {
+    return this._id_pago;
+  }
+  public get id_suscripcion(): string {
+    return this._id_suscripcion;
+  }
+  public get monto(): number {
+    return this._monto;
+  }
+  public get monto_neto(): number | null | undefined {
+    return this._monto_neto;
+  }
+  public get mp_payment_id(): string | null | undefined {
+    return this._mp_payment_id;
+  }
+  public get id_estado(): string {
+    return this._id_estado;
+  }
+  public get fecha_pago(): Date | null | undefined {
+    return this._fecha_pago;
+  }
+
+  public get mp_payload_respuesta(): any | null | undefined {
+    return this._mp_payload_respuesta;
+  }
+  public get fecha_creacion(): Date {
+    return this._fecha_creacion;
+  }
+  public get fecha_actualizacion(): Date | null | undefined {
+    return this._fecha_actualizacion;
+  }
+  public get mp_payment_method_id(): string | null | undefined {
+    return this._mp_payment_method_id;
+  }
+  public get descripcion(): string | null | undefined {
+    return this._descripcion;
+  }
 
   // Setters privados con validación
   private set id_suscripcion(value: string) {
-    if (!value) throw new DomainException('La suscripción asociada es obligatoria');
+    if (!value)
+      throw new DomainException('La suscripción asociada es obligatoria');
     this._id_suscripcion = value;
   }
 
@@ -85,10 +108,7 @@ export class Pago {
     this._id_estado = value;
   }
 
-  private set id_moneda(value: string) {
-    if (!value) throw new DomainException('La moneda es obligatoria');
-    this._id_moneda = value;
-  }
+
 
   // Factory Methods
   /**
@@ -97,7 +117,6 @@ export class Pago {
   public static crearPago(props: {
     id_suscripcion: string;
     monto: number;
-    id_moneda: string;
     id_estado_pendiente: string;
     mp_payment_id?: string | null;
     monto_neto?: number | null;
@@ -111,7 +130,6 @@ export class Pago {
       id_suscripcion: props.id_suscripcion,
       monto: props.monto,
       id_estado: props.id_estado_pendiente,
-      id_moneda: props.id_moneda,
       mp_payment_id: props.mp_payment_id,
       monto_neto: props.monto_neto,
       mp_payload_respuesta: props.mp_payload_respuesta,
@@ -128,7 +146,6 @@ export class Pago {
     id_suscripcion: string;
     monto: number;
     id_estado: string;
-    id_moneda: string;
     fecha_creacion: Date;
     monto_neto?: number | null;
     mp_payment_id?: string | null;
@@ -145,26 +162,30 @@ export class Pago {
   /**
    * Aprueba el pago, actualizando su estado e invocando la notificación clásica a los observadores.
    *
-   * @param idEstadoAprobado - ID UUID correspondiente al estado 'APROBADO'.
+   * @param idEstado - ID UUID correspondiente al estado 'APROBADO'.
    */
-  public aprobarPago(idEstadoAprobado: string): void {
-    if (this._id_estado === idEstadoAprobado) {
+  public async aprobarPago(idEstado: string): Promise<void> {
+    if (this._id_estado === idEstado) {
       throw new PagoYaAprobadoException(this._id_pago);
     }
-    this._id_estado = idEstadoAprobado;
+    this._id_estado = idEstado;
     const ahora = new Date();
     this._fecha_pago = ahora;
     this._fecha_actualizacion = ahora;
 
     // Disparar evento a observadores pasando la instancia actual
-    Pago.events.notify('pagoAprobado', this);
+    await Pago.events.notificar('pagoAprobado', this);
   }
 
   /**
    * Rechaza el pago.
+   *
+   * @param idEstado - ID UUID correspondiente al estado 'RECHAZADO'.
    */
-  public rechazarPago(idEstadoRechazado: string): void {
-    this._id_estado = idEstadoRechazado;
+  public async rechazarPago(idEstado: string): Promise<void> {
+    this._id_estado = idEstado;
     this._fecha_actualizacion = new Date();
+
+    await Pago.events.notificar('pagoRechazado', this);
   }
 }

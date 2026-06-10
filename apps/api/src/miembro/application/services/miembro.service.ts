@@ -7,12 +7,14 @@ import { Miembro } from '../../domain/entities/miembro.entity';
 import type {
   AgregarMiembroCommand,
   CambiarRolMiembroCommand,
+  RemoverMiembroCommand,
 } from '../commands/miembro.commands';
 import {
   MiembroNoEncontradoException,
   MiembroYaExistenteException,
   RolNoEncontradoException,
   ComunidadNoEncontradaException,
+  UsuarioNoEncontradoException,
 } from '../../domain/exceptions';
 
 /**
@@ -36,7 +38,7 @@ export class MiembroService implements IMiembroService {
 
     const usuario = await this.usuariosService.buscarPorId(id_usuario);
     if (!usuario) {
-      throw new MiembroNoEncontradoException(id_usuario, id_comunidad);
+      throw new UsuarioNoEncontradoException(id_usuario);
     }
 
     if (!(await this.repository.existeComunidad(id_comunidad))) {
@@ -48,7 +50,16 @@ export class MiembroService implements IMiembroService {
       id_comunidad,
     );
     if (existe) {
-      throw new MiembroYaExistenteException(id_usuario, id_comunidad);
+      if (existe.activo) {
+        throw new MiembroYaExistenteException(id_usuario, id_comunidad);
+      } else {
+        existe.activar();
+        if (existe.id_rol_comunidad !== id_rol) {
+          existe.cambiarRol(id_rol);
+        }
+        await this.repository.actualizarMiembro(existe);
+        return;
+      }
     }
 
     const miembro = Miembro.crearMiembro({
@@ -97,5 +108,38 @@ export class MiembroService implements IMiembroService {
     id_comunidad: string,
   ): Promise<boolean> {
     return this.repository.esCreadorDeComunidad(id_usuario, id_comunidad);
+  }
+
+  public async buscarMiembro(
+    id_usuario: string,
+    id_comunidad: string,
+  ): Promise<Miembro | null> {
+    const miembro = await this.repository.buscarMiembroPorId(
+      id_usuario,
+      id_comunidad,
+    );
+    if (miembro && !miembro.activo) {
+      return null;
+    }
+    return miembro;
+  }
+
+  /**
+   * Elimina un usuario como miembro de una comunidad.
+   */
+  @Transactional()
+  public async removerMiembro(command: RemoverMiembroCommand): Promise<void> {
+    const { id_usuario, id_comunidad } = command;
+
+    const miembro = await this.repository.buscarMiembroPorId(
+      id_usuario,
+      id_comunidad,
+    );
+    if (!miembro || !miembro.activo) {
+      throw new MiembroNoEncontradoException(id_usuario, id_comunidad);
+    }
+
+    miembro.desactivar();
+    await this.repository.actualizarMiembro(miembro);
   }
 }

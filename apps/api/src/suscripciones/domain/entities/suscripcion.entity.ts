@@ -51,19 +51,45 @@ export class Suscripcion {
   }
 
   // Getters
-  public get suscripcion_id(): string { return this._suscripcion_id; }
-  public get fecha_suscripcion(): Date { return this._fecha_suscripcion; }
-  public get fecha_inicio(): Date | null | undefined { return this._fecha_inicio; }
-  public get fecha_fin(): Date | null | undefined { return this._fecha_fin; }
-  public get external_reference(): string | null | undefined { return this._external_reference; }
-  public get mp_subscription_id(): string | null | undefined { return this._mp_subscription_id; }
-  public get init_point(): string | null | undefined { return this._init_point; }
-  public get fecha_actualizacion(): Date | null | undefined { return this._fecha_actualizacion; }
-  public get fecha_proximo_pago(): Date | null | undefined { return this._fecha_proximo_pago; }
-  public get back_url(): string | null | undefined { return this._back_url; }
-  public get id_usuario(): string { return this._id_usuario; }
-  public get id_plan_comunidad(): string { return this._id_plan_comunidad; }
-  public get id_estado(): string { return this._id_estado; }
+  public get suscripcion_id(): string {
+    return this._suscripcion_id;
+  }
+  public get fecha_suscripcion(): Date {
+    return this._fecha_suscripcion;
+  }
+  public get fecha_inicio(): Date | null | undefined {
+    return this._fecha_inicio;
+  }
+  public get fecha_fin(): Date | null | undefined {
+    return this._fecha_fin;
+  }
+  public get external_reference(): string | null | undefined {
+    return this._external_reference;
+  }
+  public get mp_subscription_id(): string | null | undefined {
+    return this._mp_subscription_id;
+  }
+  public get init_point(): string | null | undefined {
+    return this._init_point;
+  }
+  public get fecha_actualizacion(): Date | null | undefined {
+    return this._fecha_actualizacion;
+  }
+  public get fecha_proximo_pago(): Date | null | undefined {
+    return this._fecha_proximo_pago;
+  }
+  public get back_url(): string | null | undefined {
+    return this._back_url;
+  }
+  public get id_usuario(): string {
+    return this._id_usuario;
+  }
+  public get id_plan_comunidad(): string {
+    return this._id_plan_comunidad;
+  }
+  public get id_estado(): string {
+    return this._id_estado;
+  }
 
   // Setters privados con validación
   private set id_usuario(value: string) {
@@ -72,7 +98,8 @@ export class Suscripcion {
   }
 
   private set id_plan_comunidad(value: string) {
-    if (!value) throw new DomainException('El plan de comunidad es obligatorio');
+    if (!value)
+      throw new DomainException('El plan de comunidad es obligatorio');
     this._id_plan_comunidad = value;
   }
 
@@ -131,7 +158,7 @@ export class Suscripcion {
   /**
    * Activa la suscripción registrando el inicio del servicio y la fecha del primer/próximo cobro.
    */
-  public activar(idEstadoActiva: string, proximoCobro: Date): void {
+  public activarSuscripcion(idEstadoActiva: string, proximoCobro: Date): void {
     this.id_estado = idEstadoActiva;
     const ahora = new Date();
     if (!this._fecha_inicio) {

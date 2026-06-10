@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import NextImage from 'next/image';
 import { Image as ImageIcon, Layout, Type, Loader2, Save } from 'lucide-react';
@@ -27,9 +27,12 @@ export function EditCommunityForm({ categorias, comunidad }: EditCommunityFormPr
   const router = useRouter();
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isSubmittingRef = useRef(false);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     setIsPending(true);
     setError(null);
 
@@ -43,9 +46,11 @@ export function EditCommunityForm({ categorias, comunidad }: EditCommunityFormPr
         router.push(`/comunidades/${nextSlug}`);
       } else {
         setError(result.error || 'Error desconocido');
+        isSubmittingRef.current = false;
       }
     } catch {
       setError('Error al conectar con el servidor');
+      isSubmittingRef.current = false;
     } finally {
       setIsPending(false);
     }
@@ -163,12 +168,23 @@ export function EditCommunityForm({ categorias, comunidad }: EditCommunityFormPr
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) {
+                      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+                      const allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
+                      const extension = file.name.split('.').pop()?.toLowerCase();
+
+                      if (!allowedTypes.includes(file.type) || !extension || !allowedExtensions.includes(extension)) {
+                        setError('El formato del archivo no es válido. Solo se permiten imágenes (JPEG, PNG, WEBP)');
+                        e.target.value = '';
+                        return;
+                      }
+
                       if (file.size > 2 * 1024 * 1024) {
                         setError('El tamaño de la imagen no puede superar los 2MB');
                         e.target.value = '';
-                      } else {
-                        setError(null);
+                        return;
                       }
+
+                      setError(null);
                     }
                   }}
                 />

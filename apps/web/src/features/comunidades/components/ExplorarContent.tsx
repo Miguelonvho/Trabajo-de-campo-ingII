@@ -9,9 +9,10 @@ import { IComunidad, ICategoriaComunidad } from '@repo/types';
 interface ExplorarContentProps {
   comunidadesIniciales: IComunidad[];
   categorias: ICategoriaComunidad[];
+  errorMsg?: string | null;
 }
 
-export function ExplorarContent({ comunidadesIniciales, categorias }: ExplorarContentProps) {
+export function ExplorarContent({ comunidadesIniciales, categorias, errorMsg }: ExplorarContentProps) {
   const [selectedCategory, setSelectedCategory] = useState('Todas');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -58,20 +59,22 @@ export function ExplorarContent({ comunidadesIniciales, categorias }: ExplorarCo
       {filteredCommunities.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredCommunities.map((community) => (
-            <CommunityCard key={community.id_comunidad} community={community} href="/proximamente" />
+            <CommunityCard key={community.id_comunidad} community={community} href={`/comunidades/${community.slug}`} />
           ))}
         </div>
       ) : (
         <div className="text-center py-24 bg-slate-50 rounded-3xl border border-dashed border-slate-200">
           <p className="text-slate-500 text-lg font-medium">
-            No encontramos comunidades que coincidan con tu búsqueda.
+            {errorMsg || "No encontramos comunidades que coincidan con tu búsqueda."}
           </p>
-          <button
-            onClick={() => { setSelectedCategory('Todas'); setSearchQuery(''); }}
-            className="mt-6 text-sky-600 font-black hover:text-sky-700 transition-colors uppercase text-xs tracking-widest"
-          >
-            Ver todas las comunidades
-          </button>
+          {!errorMsg && (
+            <button
+              onClick={() => { setSelectedCategory('Todas'); setSearchQuery(''); }}
+              className="mt-6 text-sky-600 font-black hover:text-sky-700 transition-colors uppercase text-xs tracking-widest"
+            >
+              Ver todas las comunidades
+            </button>
+          )}
         </div>
       )}
     </>

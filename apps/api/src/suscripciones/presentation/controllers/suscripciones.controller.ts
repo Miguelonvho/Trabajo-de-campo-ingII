@@ -1,11 +1,13 @@
 import {
   Controller,
   Post,
+  Get,
   Body,
   UseGuards,
   HttpCode,
   HttpStatus,
   Req,
+  Param,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -39,10 +41,13 @@ export class SuscripcionesController {
    * @param dto - Datos del plan y tarjeta de crédito tokenizada.
    * @param req - Objeto de petición HTTP conteniendo el usuario autenticado.
    */
-  @ApiOperation({ summary: 'Crea una intención de suscripción en Mercado Pago y localmente' })
+  @ApiOperation({
+    summary: 'Crea una intención de suscripción en Mercado Pago y localmente',
+  })
   @ApiResponse({
     status: 201,
-    description: 'La intención de suscripción ha sido registrada exitosamente en estado PENDIENTE.',
+    description:
+      'La intención de suscripción ha sido registrada exitosamente en estado PENDIENTE.',
     type: SuscripcionResponseDto,
   })
   @ApiResponse({ status: 401, description: 'No autorizado.' })
@@ -64,5 +69,59 @@ export class SuscripcionesController {
     );
 
     return SuscripcionResponseDto.fromEntity(resultado);
+  }
+
+  /**
+   * Cancela de forma lógica una suscripción de la que el usuario logueado es titular.
+   *
+   * @param idSuscripcion - UUID de la suscripción.
+   * @param req - Objeto de petición conteniendo el usuario autenticado.
+   */
+  @ApiOperation({
+    summary: 'Cancela de forma lógica una suscripción del usuario',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'La suscripción ha sido cancelada exitosamente.',
+  })
+  @ApiResponse({ status: 401, description: 'No autorizado.' })
+  @ApiResponse({ status: 403, description: 'No tienes permisos para cancelar esta suscripción.' })
+  @ApiResponse({ status: 404, description: 'Suscripción no encontrada.' })
+  @Post(':id/cancelar')
+  @HttpCode(HttpStatus.OK)
+  public async cancelarSuscripcion(
+    @Param('id') idSuscripcion: string,
+    @Req() req: { user: IUsuario },
+  ): Promise<void> {
+    await this.suscripcionesService.cancelarSuscripcion(
+      idSuscripcion,
+      req.user.id_usuario.toString(),
+    );
+  }
+
+  /**
+   * Obtiene la suscripción activa del usuario para una comunidad específica.
+   */
+  @ApiOperation({
+    summary: 'Obtiene la suscripción activa del usuario para una comunidad específica',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'La suscripción activa encontrada.',
+    type: SuscripcionResponseDto,
+  })
+  @ApiResponse({ status: 401, description: 'No autorizado.' })
+  @ApiResponse({ status: 404, description: 'Suscripción activa no encontrada.' })
+  @Get('comunidad/:idComunidad/activa')
+  @HttpCode(HttpStatus.OK)
+  public async obtenerSuscripcionActiva(
+    @Param('idComunidad') idComunidad: string,
+    @Req() req: { user: IUsuario },
+  ): Promise<SuscripcionResponseDto | null> {
+    const resultado = await this.suscripcionesService.obtenerSuscripcionActiva(
+      idComunidad,
+      req.user.id_usuario.toString(),
+    );
+    return resultado ? SuscripcionResponseDto.fromEntity(resultado) : null;
   }
 }

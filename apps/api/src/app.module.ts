@@ -43,7 +43,5 @@ import { PagosModule } from './pagos/pagos.module';
     SuscripcionesModule,
     PagosModule,
   ],
-
-
 })
 export class AppModule {}

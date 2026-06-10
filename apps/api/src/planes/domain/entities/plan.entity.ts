@@ -172,7 +172,8 @@ export class PlanComunidad {
 
   // Métodos de Comportamiento
   public desactivarPlanComunidad(): void {
-    if (!this._activa) throw new PlanYaInactivoException(this._id_plan_comunidad);
+    if (!this._activa)
+      throw new PlanYaInactivoException(this._id_plan_comunidad);
     this._activa = false;
   }
 

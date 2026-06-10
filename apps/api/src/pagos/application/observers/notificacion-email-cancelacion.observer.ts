@@ -1,16 +1,15 @@
 import { Logger } from '@nestjs/common';
-import { PagoListener } from '../../domain/pago-listener.interface';
+import { PagoObserver } from '../../domain/pago-observer.interface';
 import { Pago } from '../../domain/entities/pago.entity';
 import { ISuscripcionesRepository } from '../../../suscripciones/domain/ports/suscripciones.repository.interface';
 import { IPlanesService } from '../../../planes/application/services/planes.service.interface';
 import { IUsuariosService } from '../../../usuarios/services/usuarios.service.interface';
 import { IComunidadService } from '../../../comunidad/application/services/comunidad.service.interface';
 
-/**
- * Observador encargado de enviar notificaciones de correo tras el procesamiento exitoso de un pago.
- */
-export class NotificacionEmailListener implements PagoListener {
-  private readonly logger = new Logger(NotificacionEmailListener.name);
+export class NotificacionEmailCancelacionObserver implements PagoObserver {
+  private readonly logger = new Logger(
+    NotificacionEmailCancelacionObserver.name,
+  );
 
   public constructor(
     private readonly suscripcionesRepository: ISuscripcionesRepository,
@@ -19,14 +18,12 @@ export class NotificacionEmailListener implements PagoListener {
     private readonly comunidadService: IComunidadService,
   ) {}
 
-  /**
-   * Al recibir la notificación, obtiene la información del usuario y comunidad para simular el correo.
-   */
-  public async update(pago: Pago): Promise<void> {
+  public async actualizar(pago: Pago): Promise<void> {
     const suscripcion =
       await this.suscripcionesRepository.buscarSuscripcionPorId(
         pago.id_suscripcion,
       );
+
     if (!suscripcion) return;
 
     const [usuario, plan] = await Promise.all([
@@ -39,11 +36,11 @@ export class NotificacionEmailListener implements PagoListener {
     const comunidad = await this.comunidadService.getComunidad(
       plan.id_comunidad,
     );
+
     if (!comunidad) return;
 
-    // Simulación del envío de correo (Mock de proveedor de emails)
     this.logger.log(
-      `[MOCK EMAIL SENT] Para: ${usuario.email} | Asunto: ¡Te damos la bienvenida a ${comunidad.nombre}! | Cuerpo: Hola ${usuario.nombre}, tu pago de ${plan.moneda?.moneda || 'ARS'} ${pago.monto} ha sido procesado con éxito. Ya tienes acceso a la comunidad. Link: /comunidades/${comunidad.slug}`,
+      `[MOCK EMAIL SENT] Para: ${usuario.email} | Asunto: Tu suscripción a ${comunidad.nombre} fue cancelada | Cuerpo: Hola ${usuario.nombre}, tu pago de ${plan.moneda?.moneda || 'ARS'} ${pago.monto} fue rechazado y tu acceso a la comunidad ha sido revocado.`,
     );
   }
 }

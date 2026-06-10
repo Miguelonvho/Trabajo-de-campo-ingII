@@ -1,4 +1,4 @@
-import { PagoListener } from './pago-listener.interface';
+import { PagoObserver } from './pago-observer.interface';
 import type { Pago } from './entities/pago.entity';
 
 /**
@@ -6,32 +6,32 @@ import type { Pago } from './entities/pago.entity';
  * Almacena los observadores registrados por tipo de evento y los notifica.
  */
 export class PagoEventManager {
-  private readonly listeners = new Map<string, PagoListener[]>();
+  private readonly observers = new Map<string, PagoObserver[]>();
 
   /**
    * Suscribe un observador a un tipo de evento en particular.
    */
-  public subscribe(eventType: string, listener: PagoListener): void {
-    if (!this.listeners.has(eventType)) {
-      this.listeners.set(eventType, []);
+  public suscribir(tipoEvento: string, observador: PagoObserver): void {
+    if (!this.observers.has(tipoEvento)) {
+      this.observers.set(tipoEvento, []);
     }
-    const currentListeners = this.listeners.get(eventType);
+    const currentObservers = this.observers.get(tipoEvento);
 
     // Evitamos duplicidad de suscripción
-    if (currentListeners && !currentListeners.includes(listener)) {
-      currentListeners.push(listener);
+    if (currentObservers && !currentObservers.includes(observador)) {
+      currentObservers.push(observador);
     }
   }
 
   /**
    * Desuscribe un observador.
    */
-  public unsubscribe(eventType: string, listener: PagoListener): void {
-    const currentListeners = this.listeners.get(eventType);
-    if (currentListeners) {
-      const index = currentListeners.indexOf(listener);
+  public desuscribir(tipoEvento: string, observador: PagoObserver): void {
+    const currentObservers = this.observers.get(tipoEvento);
+    if (currentObservers) {
+      const index = currentObservers.indexOf(observador);
       if (index !== -1) {
-        currentListeners.splice(index, 1);
+        currentObservers.splice(index, 1);
       }
     }
   }
@@ -39,19 +39,19 @@ export class PagoEventManager {
   /**
    * Notifica a todos los observadores registrados para el tipo de evento especificado.
    */
-  public notify(eventType: string, pago: Pago): void {
-    const currentListeners = this.listeners.get(eventType);
-    if (currentListeners) {
-      currentListeners.forEach((listener) => {
-        listener.update(pago);
-      });
+  public async notificar(tipoEvento: string, pago: Pago): Promise<void> {
+    const currentObservers = this.observers.get(tipoEvento);
+    if (currentObservers) {
+      for (const observador of currentObservers) {
+        await observador.actualizar(pago);
+      }
     }
   }
 
   /**
-   * Obtiene los listeners suscritos a un evento (útil para pruebas unitarias).
+   * Obtiene los observadores suscritos a un evento (útil para pruebas unitarias).
    */
-  public getListeners(eventType: string): PagoListener[] {
-    return this.listeners.get(eventType) || [];
+  public obtenerObservadores(tipoEvento: string): PagoObserver[] {
+    return this.observers.get(tipoEvento) || [];
   }
 }

@@ -1,8 +1,4 @@
-import {
-  Catch,
-  ExceptionFilter,
-  ArgumentsHost,
-} from '@nestjs/common';
+import { Catch, ExceptionFilter, ArgumentsHost } from '@nestjs/common';
 import { DomainException } from '../exceptions/domain.exception';
 import { Response } from 'express';
 

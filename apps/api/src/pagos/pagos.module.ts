@@ -1,4 +1,4 @@
-import { Module, OnModuleInit } from '@nestjs/common';
+import { Module, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { APP_FILTER } from '@nestjs/core';
 import { PrismaModule } from '../prisma/prisma.module';
 import { MercadoPagoModule } from '../mercadopago/mercadopago.module';
@@ -15,10 +15,12 @@ import { PagosService } from './application/services/pagos.service';
 import { IPagosRepository } from './domain/ports/pagos.repository.interface';
 import { PrismaPagosRepository } from './infrastructure/persistence/repositories/pagos.prisma.repository';
 
-import { ActualizarEstadoSuscripcionListener } from './application/listeners/actualizar-estado-suscripcion.listener';
-import { AccesoComunidadListener } from './application/listeners/acceso-comunidad.listener';
-import { NotificacionEmailListener } from './application/listeners/notificacion-email.listener';
-import { PagoEventsRegistry } from './application/pago-events-registry';
+import { ActualizarEstadoSuscripcionObserver } from './application/observers/actualizar-estado-suscripcion.observer';
+import { AccesoComunidadObserver } from './application/observers/acceso-comunidad.observer';
+import { NotificacionEmailObserver } from './application/observers/notificacion-email.observer';
+import { DesactivarSuscripcionObserver } from './application/observers/desactivar-suscripcion.observer';
+import { RemoverMiembroComunidadObserver } from './application/observers/remover-miembro-comunidad.observer';
+import { NotificacionEmailCancelacionObserver } from './application/observers/notificacion-email-cancelacion.observer';
 import { Pago } from './domain/entities/pago.entity';
 
 import { ISuscripcionesRepository } from '../suscripciones/domain/ports/suscripciones.repository.interface';
@@ -51,21 +53,21 @@ import { IComunidadService } from '../comunidad/application/services/comunidad.s
       provide: IPagosRepository,
       useClass: PrismaPagosRepository,
     },
-    // Registrar los listeners como providers para poder inyectar sus dependencias
+    // Registrar los observers como providers para poder inyectar sus dependencias
     {
-      provide: ActualizarEstadoSuscripcionListener,
+      provide: ActualizarEstadoSuscripcionObserver,
       useFactory: (suscripcionesRepository: ISuscripcionesRepository) =>
-        new ActualizarEstadoSuscripcionListener(suscripcionesRepository),
+        new ActualizarEstadoSuscripcionObserver(suscripcionesRepository),
       inject: [ISuscripcionesRepository],
     },
     {
-      provide: AccesoComunidadListener,
+      provide: AccesoComunidadObserver,
       useFactory: (
         suscripcionesRepository: ISuscripcionesRepository,
         planesService: IPlanesService,
         miembroService: IMiembroService,
       ) =>
-        new AccesoComunidadListener(
+        new AccesoComunidadObserver(
           suscripcionesRepository,
           planesService,
           miembroService,
@@ -73,14 +75,55 @@ import { IComunidadService } from '../comunidad/application/services/comunidad.s
       inject: [ISuscripcionesRepository, IPlanesService, IMiembroService],
     },
     {
-      provide: NotificacionEmailListener,
+      provide: NotificacionEmailObserver,
       useFactory: (
         suscripcionesRepository: ISuscripcionesRepository,
         planesService: IPlanesService,
         usuariosService: IUsuariosService,
         comunidadService: IComunidadService,
       ) =>
-        new NotificacionEmailListener(
+        new NotificacionEmailObserver(
+          suscripcionesRepository,
+          planesService,
+          usuariosService,
+          comunidadService,
+        ),
+      inject: [
+        ISuscripcionesRepository,
+        IPlanesService,
+        IUsuariosService,
+        IComunidadService,
+      ],
+    },
+    {
+      provide: DesactivarSuscripcionObserver,
+      useFactory: (suscripcionesRepository: ISuscripcionesRepository) =>
+        new DesactivarSuscripcionObserver(suscripcionesRepository),
+      inject: [ISuscripcionesRepository],
+    },
+    {
+      provide: RemoverMiembroComunidadObserver,
+      useFactory: (
+        suscripcionesRepository: ISuscripcionesRepository,
+        planesService: IPlanesService,
+        miembroService: IMiembroService,
+      ) =>
+        new RemoverMiembroComunidadObserver(
+          suscripcionesRepository,
+          planesService,
+          miembroService,
+        ),
+      inject: [ISuscripcionesRepository, IPlanesService, IMiembroService],
+    },
+    {
+      provide: NotificacionEmailCancelacionObserver,
+      useFactory: (
+        suscripcionesRepository: ISuscripcionesRepository,
+        planesService: IPlanesService,
+        usuariosService: IUsuariosService,
+        comunidadService: IComunidadService,
+      ) =>
+        new NotificacionEmailCancelacionObserver(
           suscripcionesRepository,
           planesService,
           usuariosService,
@@ -96,20 +139,33 @@ import { IComunidadService } from '../comunidad/application/services/comunidad.s
   ],
   exports: [IPagosService, IPagosRepository],
 })
-export class PagosModule implements OnModuleInit {
+export class PagosModule implements OnModuleInit, OnModuleDestroy {
   public constructor(
-    private readonly activarSuscripcion: ActualizarEstadoSuscripcionListener,
-    private readonly accesoComunidad: AccesoComunidadListener,
-    private readonly notificacionEmail: NotificacionEmailListener,
+    private readonly activarSuscripcion: ActualizarEstadoSuscripcionObserver,
+    private readonly accesoComunidad: AccesoComunidadObserver,
+    private readonly notificacionEmail: NotificacionEmailObserver,
+    private readonly desactivarSuscripcion: DesactivarSuscripcionObserver,
+    private readonly removerMiembro: RemoverMiembroComunidadObserver,
+    private readonly notificacionEmailCancelacion: NotificacionEmailCancelacionObserver,
   ) {}
 
   public onModuleInit(): void {
-    // Al arrancar el servidor web, configuramos el registro de los observadores en el gestor estático (Pago.events)
-    PagoEventsRegistry.registrar(
-      Pago.events,
-      this.activarSuscripcion,
-      this.accesoComunidad,
-      this.notificacionEmail,
-    );
+    Pago.events.suscribir('pagoAprobado', this.activarSuscripcion);
+    Pago.events.suscribir('pagoAprobado', this.accesoComunidad);
+    Pago.events.suscribir('pagoAprobado', this.notificacionEmail);
+
+    Pago.events.suscribir('pagoRechazado', this.desactivarSuscripcion);
+    Pago.events.suscribir('pagoRechazado', this.removerMiembro);
+    Pago.events.suscribir('pagoRechazado', this.notificacionEmailCancelacion);
+  }
+
+  public onModuleDestroy(): void {
+    Pago.events.desuscribir('pagoAprobado', this.activarSuscripcion);
+    Pago.events.desuscribir('pagoAprobado', this.accesoComunidad);
+    Pago.events.desuscribir('pagoAprobado', this.notificacionEmail);
+
+    Pago.events.desuscribir('pagoRechazado', this.desactivarSuscripcion);
+    Pago.events.desuscribir('pagoRechazado', this.removerMiembro);
+    Pago.events.desuscribir('pagoRechazado', this.notificacionEmailCancelacion);
   }
 }
