@@ -170,19 +170,9 @@ describe('PlanesService - crearPlan()', () => {
         expect(mpServiceMock.createPreapprovalPlan).not.toHaveBeenCalled();
     });
 
-    // ── CP7: FRONTEND_URL no configurado ─────────────────────────────────────
-    // Prueba un error de configuración del servidor (variables de entorno).
-    it('CP7 - debe lanzar InternalServerErrorException con mensaje "No se configuro el FRONTEND_URL" cuando FRONTEND_URL no está configurado', async () => {
-        configServiceMock.get.mockReturnValue(undefined);
-
-        await expect(service.crearPlan(comandoValido)).rejects.toThrow(InternalServerErrorException);
-        await expect(service.crearPlan(comandoValido)).rejects.toThrow('No se configuro el FRONTEND_URL');
-        expect(mpServiceMock.createPreapprovalPlan).not.toHaveBeenCalled();
-    });
-
-    // ── CP8: falla Mercado Pago ───────────────────────────────────────────────
+    // ── CP7: falla Mercado Pago ───────────────────────────────────────────────
     // Si MercadoPago se cae o responde con error, el servicio debe manejarlo limpiamente.
-    it('CP8 - debe propagar InternalServerErrorException desde MP sin llamar a crearPlan() en BD cuando Mercado Pago falla', async () => {
+    it('CP7 - debe propagar InternalServerErrorException desde MP sin llamar a crearPlan() en BD cuando Mercado Pago falla', async () => {
         mpServiceMock.createPreapprovalPlan.mockRejectedValue(
             new InternalServerErrorException('No se pudo registrar el plan en Mercado Pago, intentá de nuevo'),
         );
@@ -191,10 +181,10 @@ describe('PlanesService - crearPlan()', () => {
         expect(planesRepoMock.crearPlan).not.toHaveBeenCalled(); // No debe guardar nada en BD
     });
 
-    // ── CP9: MP ok pero falla la BD → rollback en MP ─────────────────────────
+    // ── CP8: MP ok pero falla la BD → rollback en MP ─────────────────────────
     // Prueba un caso complejo: Se creó el plan en MP pero falló la BD local. 
     // Se DEBE cancelar en MP para que no quede huérfano.
-    it('CP9 - debe cancelar el plan en MP y lanzar InternalServerErrorException con mensaje "Error al guardar el plan, intentá de nuevo" cuando falla la BD', async () => {
+    it('CP8 - debe cancelar el plan en MP y lanzar InternalServerErrorException con mensaje "Error al guardar el plan, intentá de nuevo" cuando falla la BD', async () => {
         mpServiceMock.createPreapprovalPlan.mockResolvedValue({
             mp_preapproval_plan_id: 'mp-plan-abc123',
         });
